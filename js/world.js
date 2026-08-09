@@ -168,7 +168,7 @@ function buildChunk(cx, cz) {
 }
 
 export function updateChunks() {
-  if (getBlockDefs().length === 0) return;
+  if (!isTexturesReady()) return;
   const cx = Math.floor(camera.position.x / CHUNK_SIZE);
   const cz = Math.floor(camera.position.z / CHUNK_SIZE);
   const needed = new Set();
