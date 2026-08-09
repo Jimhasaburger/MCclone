@@ -1,0 +1,13 @@
+{
+  "id": 5,
+  "layer": "",
+  "unbreakable": false,
+  "sides": {
+    "top": "assets/textures/blocks/logtop.png",
+    "bottom": "assets/textures/blocks/logtop.png",
+    "north": "assets/textures/blocks/logside.png",
+    "south": "assets/textures/blocks/logside.png",
+    "east": "assets/textures/blocks/logside.png",
+    "west": "assets/textures/blocks/logside.png"
+  }
+}
