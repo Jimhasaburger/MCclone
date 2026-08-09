@@ -1,6 +1,31 @@
 import JSZip from 'jszip';
 
-const PREFIX = 'mcworld_chunk_';
+const DB_NAME = 'mcworld';
+const STORE = 'chunks';
+
+let db;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    if (db) return resolve(db);
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      req.result.createObjectStore(STORE);
+    };
+    req.onsuccess = () => {
+      db = req.result;
+      resolve(db);
+    };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function idbRequest(req) {
+  return new Promise((resolve, reject) => {
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
 
 function chunkKey(cx, cz) {
   return `${cx},${cz}`;
@@ -25,37 +50,35 @@ export function parseBlocks(text) {
   return blocks;
 }
 
-export function loadSavedChunk(cx, cz) {
-  const text = localStorage.getItem(PREFIX + chunkKey(cx, cz));
-  return text === null ? null : parseBlocks(text);
+export async function loadSavedChunk(cx, cz) {
+  const d = await openDB();
+  const text = await idbRequest(d.transaction(STORE).objectStore(STORE).get(chunkKey(cx, cz)));
+  return text === undefined ? null : parseBlocks(text);
 }
 
-export function saveChunkToStorage(cx, cz, blocks) {
-  localStorage.setItem(PREFIX + chunkKey(cx, cz), serializeBlocks(blocks));
+export async function saveChunkToStorage(cx, cz, blocks) {
+  const d = await openDB();
+  await idbRequest(d.transaction(STORE, 'readwrite').objectStore(STORE).put(serializeBlocks(blocks), chunkKey(cx, cz)));
 }
 
-export function getAllSavedChunks() {
-  const chunks = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (!key || !key.startsWith(PREFIX)) continue;
-    const [cx, cz] = key.slice(PREFIX.length).split(',');
-    chunks.push({ cx: Number(cx), cz: Number(cz), data: localStorage.getItem(key) });
-  }
-  return chunks;
+export async function getAllSavedChunks() {
+  const d = await openDB();
+  const store = d.transaction(STORE).objectStore(STORE);
+  const keys = await idbRequest(store.getAllKeys());
+  const values = await idbRequest(store.getAll());
+  return keys.map((key, i) => {
+    const [cx, cz] = key.split(',');
+    return { cx: Number(cx), cz: Number(cz), data: values[i] };
+  });
 }
 
-export function clearSavedChunks() {
-  const keys = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith(PREFIX)) keys.push(key);
-  }
-  keys.forEach(key => localStorage.removeItem(key));
+export async function clearSavedChunks() {
+  const d = await openDB();
+  await idbRequest(d.transaction(STORE, 'readwrite').objectStore(STORE).clear());
 }
 
 export async function exportWorld() {
-  const saved = getAllSavedChunks();
+  const saved = await getAllSavedChunks();
   const zip = new JSZip();
   for (const c of saved) {
     zip.file(`${c.cx}-${c.cz}.txt`, c.data);
@@ -80,10 +103,17 @@ export async function importWorld(file) {
     const text = await zip.files[name].async('string');
     chunks.push({ cx: Number(m[1]), cz: Number(m[2]), data: text });
   }
-  clearSavedChunks();
+  const d = await openDB();
+  const tx = d.transaction(STORE, 'readwrite');
+  const store = tx.objectStore(STORE);
+  await idbRequest(store.clear());
   for (const c of chunks) {
-    localStorage.setItem(PREFIX + chunkKey(c.cx, c.cz), c.data);
+    store.put(c.data, chunkKey(c.cx, c.cz));
   }
+  await new Promise((resolve, reject) => {
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
   return chunks;
 }
 
@@ -97,7 +127,7 @@ export function initSaveControls(onImport) {
   document.addEventListener('keydown', e => {
     if (e.code === 'KeyG') {
       e.preventDefault();
-      exportWorld();
+      exportWorld().catch(err => console.error('Failed to export world', err));
     } else if (e.code === 'KeyI') {
       e.preventDefault();
       input.click();

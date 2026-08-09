@@ -5,12 +5,15 @@ import { materials } from './textures.js';
 import { loadSavedChunk, saveChunkToStorage } from './save.js';
 
 const chunks = new Map();
+const loading = new Set();
+const loadedChunks = new Set();
 const blockMap = new Map();
 const dummy = new THREE.Object3D();
 const boxGeo = new THREE.BoxGeometry(1, 1, 1);
 
 let scene;
 let camera;
+let worldVersion = 0;
 
 export function initWorld(sceneRef, cameraRef) {
   scene = sceneRef;
@@ -51,7 +54,7 @@ function saveChunk(cx, cz) {
       }
     }
   }
-  saveChunkToStorage(cx, cz, blocks);
+  saveChunkToStorage(cx, cz, blocks).catch(err => console.error('Failed to save chunk', err));
 }
 
 function saveChunkFromKey(key) {
@@ -60,14 +63,17 @@ function saveChunkFromKey(key) {
   saveChunk(cx, cz);
 }
 
-function loadChunk(cx, cz) {
-  const saved = loadSavedChunk(cx, cz);
+async function loadChunk(cx, cz) {
+  const key = chunkKey(cx, cz);
+  if (loadedChunks.has(key)) return;
+  const saved = await loadSavedChunk(cx, cz);
   if (saved) {
     for (const [x, y, z, id] of saved) blockMap.set(blockKey(x, y, z), id);
-    return;
+  } else {
+    generateTerrain(cx, cz);
+    saveChunk(cx, cz);
   }
-  generateTerrain(cx, cz);
-  saveChunk(cx, cz);
+  loadedChunks.add(key);
 }
 
 function generateTerrain(cx, cz) {
@@ -123,21 +129,26 @@ export function updateChunks() {
   const cx = Math.floor(camera.position.x / CHUNK_SIZE);
   const cz = Math.floor(camera.position.z / CHUNK_SIZE);
   const needed = new Set();
+  const ver = worldVersion;
 
   for (let dx = -RENDER_DISTANCE; dx <= RENDER_DISTANCE; dx++) {
     for (let dz = -RENDER_DISTANCE; dz <= RENDER_DISTANCE; dz++) {
       const key = chunkKey(cx + dx, cz + dz);
       needed.add(key);
-      if (!chunks.has(key)) {
-        loadChunk(cx + dx, cz + dz);
-        const mesh = buildChunk(cx + dx, cz + dz);
-        if (mesh) {
-          scene.add(mesh);
+      if (chunks.has(key) || loading.has(key)) continue;
+      loading.add(key);
+      loadChunk(cx + dx, cz + dz)
+        .catch(err => {
+          console.error('Failed to load chunk', key, err);
+          generateTerrain(cx + dx, cz + dz);
+        })
+        .then(() => {
+          loading.delete(key);
+          if (ver !== worldVersion || chunks.has(key) || !needed.has(key)) return;
+          const mesh = buildChunk(cx + dx, cz + dz);
+          if (mesh) scene.add(mesh);
           chunks.set(key, mesh);
-        } else {
-          chunks.set(key, null);
-        }
-      }
+        });
     }
   }
 
@@ -171,10 +182,13 @@ export function saveAllLoadedChunks() {
 }
 
 export function reloadWorld() {
+  worldVersion++;
   for (const [key, mesh] of chunks) {
     if (mesh) scene.remove(mesh);
   }
   chunks.clear();
+  loading.clear();
+  loadedChunks.clear();
   blockMap.clear();
   updateChunks();
 }
