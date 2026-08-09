@@ -1,6 +1,7 @@
 {
   "id": 1,
   "layer": "-1_1",
+  "unbreakable": false,
   "sides": {
     "top": "assets/textures/blocks/grassblocktop.png",
     "bottom": "assets/textures/blocks/dirt.png",

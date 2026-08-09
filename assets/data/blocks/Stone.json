@@ -1,6 +1,7 @@
 {
   "id": 2,
   "layer": -2,
+  "unbreakable": false,
   "sides": {
     "top": "assets/textures/blocks/stone.png",
     "bottom": "assets/textures/blocks/stone.png",

@@ -31,6 +31,12 @@ export function initUI(canvasRef) {
   fpsEl = document.getElementById('fps');
   if (fpsEl) fpsEl.style.fontFamily = "'GameFont', sans-serif";
 
+  const crosshair = document.createElement('img');
+  crosshair.id = 'crosshair';
+  crosshair.src = 'assets/textures/ui/crosshair.png';
+  crosshair.alt = '';
+  document.body.appendChild(crosshair);
+
   buildMenu();
 
   document.addEventListener('keydown', e => {

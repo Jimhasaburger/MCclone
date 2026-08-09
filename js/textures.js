@@ -55,6 +55,10 @@ export function getBlockMaterials(id) {
   return blockMaterials.get(id) || fallbackMats;
 }
 
+export function isUnbreakable(id) {
+  return Boolean(blockDefs.get(id)?.unbreakable);
+}
+
 export function getBlockDefs() {
   return [...blockDefs.values()];
 }

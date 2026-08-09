@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { CHUNK_HEIGHT, PLAYER_HEIGHT, PLAYER_SIZE } from './config.js';
-import { getChunks, rebuildChunk, hasBlock, addBlock, removeBlock } from './world.js';
+import { getChunks, rebuildChunk, hasBlock, addBlock, removeBlock, getBlockId } from './world.js';
+import { isUnbreakable } from './textures.js';
 import { playerPos } from './player.js';
 
 const raycaster = new THREE.Raycaster();
@@ -59,6 +60,7 @@ function blockIntersectsPlayer(px, py, pz) {
 function breakBlock() {
   const target = getTarget();
   if (!target) return;
+  if (isUnbreakable(getBlockId(target.bx, target.by, target.bz))) return;
   removeBlock(target.bx, target.by, target.bz);
   rebuildChunk(target.bx, target.bz);
 }

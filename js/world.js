@@ -57,6 +57,12 @@ export function removeBlock(x, y, z) {
   if (grid) grid[chunkIndex(x, y, z)] = 0;
 }
 
+export function getBlockId(x, y, z) {
+  if (y < 0 || y >= CHUNK_HEIGHT) return 0;
+  const grid = chunkData.get(chunkKey(Math.floor(x / CHUNK_SIZE), Math.floor(z / CHUNK_SIZE)));
+  return grid ? grid[chunkIndex(x, y, z)] : 0;
+}
+
 function saveChunk(cx, cz) {
   const grid = chunkData.get(chunkKey(cx, cz));
   if (!grid) return;
@@ -100,6 +106,16 @@ function blockIdAtLayer(layer) {
   for (const def of defs) {
     if (def.layers.includes(layer)) return def.id;
   }
+  let below = null;
+  let belowMin = -Infinity;
+  for (const def of defs) {
+    const min = Math.min(...def.layers);
+    if (min < layer && min > belowMin) {
+      belowMin = min;
+      below = def;
+    }
+  }
+  if (below) return below.id;
   let deepest = null;
   for (const def of defs) {
     if (!deepest || Math.min(...def.layers) < Math.min(...deepest.layers)) deepest = def;

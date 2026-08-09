@@ -1,0 +1,13 @@
+{
+  "id": 3,
+  "layer": -100,
+  "unbreakable": true,
+  "sides": {
+    "top": "assets/textures/blocks/bedrock.png",
+    "bottom": "assets/textures/blocks/bedrock.png",
+    "north": "assets/textures/blocks/bedrock.png",
+    "south": "assets/textures/blocks/bedrock.png",
+    "east": "assets/textures/blocks/bedrock.png",
+    "west": "assets/textures/blocks/bedrock.png"
+  }
+}
