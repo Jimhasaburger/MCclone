@@ -17,14 +17,10 @@ canvas {
 
 #fps {
   position: fixed;
-  top: 8px;
+  bottom: 8px;
   left: 8px;
   color: #fff;
-  font-family: monospace;
-  font-size: 14px;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 4px 8px;
-  border-radius: 4px;
+  font-size: 24px;
   pointer-events: none;
   z-index: 10;
 }

@@ -3,6 +3,9 @@ import { loadTextures } from './textures.js';
 import { initWorld, updateChunks } from './world.js';
 import { initPlayer, updatePlayer } from './player.js';
 import { initBlocks, updateOutline } from './blocks.js';
+import { initUI, setFPS, hideLoading } from './ui.js';
+import { initSaveControls } from './save.js';
+import { reloadWorld, saveAllLoadedChunks } from './world.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xc0d9e8);
@@ -23,13 +26,16 @@ directionalLight.position.set(10, 15, 10);
 scene.add(directionalLight);
 
 initWorld(scene, camera);
+initUI();
 initPlayer(camera, renderer.domElement);
 initBlocks(scene, camera, renderer.domElement);
+initSaveControls(() => reloadWorld());
 updateChunks();
-loadTextures();
+loadTextures().then(hideLoading);
+
+window.addEventListener('beforeunload', saveAllLoadedChunks);
 
 // --- FPS counter ---
-const fpsEl = document.getElementById('fps');
 let frameCount = 0;
 let lastFpsTime = performance.now();
 
@@ -45,7 +51,7 @@ function animate() {
   frameCount++;
   const now = performance.now();
   if (now - lastFpsTime >= 500) {
-    fpsEl.textContent = `FPS: ${Math.round((frameCount * 1000) / (now - lastFpsTime))}`;
+    setFPS(Math.round((frameCount * 1000) / (now - lastFpsTime)));
     frameCount = 0;
     lastFpsTime = now;
   }

@@ -2,9 +2,10 @@ import * as THREE from 'three';
 import { CHUNK_SIZE, CHUNK_HEIGHT, RENDER_DISTANCE, PLAYER_HEIGHT, PLAYER_SIZE } from './config.js';
 import { getHeight } from './noise.js';
 import { materials } from './textures.js';
+import { loadSavedChunk, saveChunkToStorage } from './save.js';
 
 const chunks = new Map();
-const blockMap = new Set();
+const blockMap = new Map();
 const dummy = new THREE.Object3D();
 const boxGeo = new THREE.BoxGeometry(1, 1, 1);
 
@@ -28,12 +29,45 @@ export function hasBlock(x, y, z) {
   return blockMap.has(blockKey(x, y, z));
 }
 
-export function addBlock(x, y, z) {
-  blockMap.add(blockKey(x, y, z));
+export function addBlock(x, y, z, id = 1) {
+  blockMap.set(blockKey(x, y, z), id);
 }
 
 export function removeBlock(x, y, z) {
   blockMap.delete(blockKey(x, y, z));
+}
+
+function saveChunk(cx, cz) {
+  const ox = cx * CHUNK_SIZE;
+  const oz = cz * CHUNK_SIZE;
+  const blocks = [];
+  for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+    for (let lz = 0; lz < CHUNK_SIZE; lz++) {
+      const wx = ox + lx;
+      const wz = oz + lz;
+      for (let y = 0; y < CHUNK_HEIGHT; y++) {
+        const id = blockMap.get(blockKey(wx, y, wz));
+        if (id) blocks.push([wx, y, wz, id]);
+      }
+    }
+  }
+  saveChunkToStorage(cx, cz, blocks);
+}
+
+function saveChunkFromKey(key) {
+  if (!chunks.has(key)) return;
+  const [cx, cz] = key.split(',').map(Number);
+  saveChunk(cx, cz);
+}
+
+function loadChunk(cx, cz) {
+  const saved = loadSavedChunk(cx, cz);
+  if (saved) {
+    for (const [x, y, z, id] of saved) blockMap.set(blockKey(x, y, z), id);
+    return;
+  }
+  generateTerrain(cx, cz);
+  saveChunk(cx, cz);
 }
 
 function generateTerrain(cx, cz) {
@@ -95,7 +129,7 @@ export function updateChunks() {
       const key = chunkKey(cx + dx, cz + dz);
       needed.add(key);
       if (!chunks.has(key)) {
-        generateTerrain(cx + dx, cz + dz);
+        loadChunk(cx + dx, cz + dz);
         const mesh = buildChunk(cx + dx, cz + dz);
         if (mesh) {
           scene.add(mesh);
@@ -110,6 +144,7 @@ export function updateChunks() {
   for (const [key, mesh] of chunks) {
     if (!needed.has(key)) {
       if (mesh) scene.remove(mesh);
+      saveChunkFromKey(key);
       chunks.delete(key);
     }
   }
@@ -121,11 +156,27 @@ export function rebuildChunksAround(wx, wz) {
   for (let dx = -1; dx <= 1; dx++) {
     for (let dz = -1; dz <= 1; dz++) {
       const key = chunkKey(cx + dx, cz + dz);
+      saveChunkFromKey(key);
       const mesh = chunks.get(key);
       if (mesh) scene.remove(mesh);
       chunks.delete(key);
     }
   }
+}
+
+export function saveAllLoadedChunks() {
+  for (const key of chunks.keys()) {
+    saveChunkFromKey(key);
+  }
+}
+
+export function reloadWorld() {
+  for (const [key, mesh] of chunks) {
+    if (mesh) scene.remove(mesh);
+  }
+  chunks.clear();
+  blockMap.clear();
+  updateChunks();
 }
 
 export function getChunks() {

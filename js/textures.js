@@ -26,8 +26,5 @@ export async function loadTextures() {
     );
   } catch (e) {
     console.error('Failed to load textures', e);
-  } finally {
-    const loading = document.getElementById('loading');
-    if (loading) loading.remove();
   }
 }
