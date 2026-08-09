@@ -36,6 +36,21 @@ export function removeBlock(x, y, z) {
   blockMap.delete(blockKey(x, y, z));
 }
 
+function generateTerrain(cx, cz) {
+  const ox = cx * CHUNK_SIZE;
+  const oz = cz * CHUNK_SIZE;
+  for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+    for (let lz = 0; lz < CHUNK_SIZE; lz++) {
+      const wx = ox + lx;
+      const wz = oz + lz;
+      const h = getHeight(wx, wz);
+      for (let y = 0; y < h; y++) {
+        addBlock(wx, y, wz);
+      }
+    }
+  }
+}
+
 function buildChunk(cx, cz) {
   const ox = cx * CHUNK_SIZE;
   const oz = cz * CHUNK_SIZE;
@@ -46,11 +61,10 @@ function buildChunk(cx, cz) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
       const wx = ox + lx;
       const wz = oz + lz;
-      const h = getHeight(wx, wz);
-      for (let y = 0; y < h; y++) {
+      for (let y = 0; y < CHUNK_HEIGHT; y++) {
+        if (!blockMap.has(blockKey(wx, y, wz))) continue;
         positions.push(lx + 0.5, y + 0.5, lz + 0.5);
         worldPositions.push(wx, y, wz);
-        addBlock(wx, y, wz);
       }
     }
   }
@@ -81,6 +95,7 @@ export function updateChunks() {
       const key = chunkKey(cx + dx, cz + dz);
       needed.add(key);
       if (!chunks.has(key)) {
+        generateTerrain(cx + dx, cz + dz);
         const mesh = buildChunk(cx + dx, cz + dz);
         if (mesh) {
           scene.add(mesh);
