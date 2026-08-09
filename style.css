@@ -217,3 +217,91 @@ canvas {
 .menu-key {
   color: #ffd700;
 }
+
+#inventory {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  image-rendering: pixelated;
+  user-select: none;
+}
+
+#inventory .inv-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+#inventory .inv-grid,
+#inventory .inv-scrollbar,
+#inventory .inv-hotbar {
+  position: absolute;
+}
+
+#inventory .inv-item-slot {
+  position: absolute;
+  cursor: pointer;
+}
+
+#inventory .inv-item-slot.empty {
+  cursor: default;
+}
+
+#inventory .inv-item-icon {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+#inventory .inv-scrollbar {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+#inventory .inv-scroll-thumb {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 30px;
+  background-image: url('assets/textures/ui/inventory/scrollbars.png');
+  background-repeat: no-repeat;
+  background-size: 24px 30px;
+  cursor: pointer;
+}
+
+#inventory .inv-hotbar-slot {
+  position: absolute;
+  cursor: pointer;
+}
+
+#inventory .inv-hotbar-slot img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+#inventory .inv-hotbar-selected {
+  display: none;
+}
+
+#inventory .inv-hotbar-slot.active .inv-hotbar-selected {
+  display: block;
+}
+
+#inventory .inv-hotbar-icon {
+  display: none;
+}
+
+#inventory .inv-hotbar-slot.filled .inv-hotbar-icon {
+  display: block;
+}
