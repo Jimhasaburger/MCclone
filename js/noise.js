@@ -1,7 +1,17 @@
 let seed = 0;
+let seedReady = false;
 
 export function setSeed(s) {
   seed = s >>> 0;
+  seedReady = true;
+}
+
+export function getSeed() {
+  return seed;
+}
+
+export function isSeedReady() {
+  return seedReady;
 }
 
 export function newSeed() {

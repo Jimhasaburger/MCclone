@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { CHUNK_SIZE, CHUNK_HEIGHT, RENDER_DISTANCE, PLAYER_HEIGHT, PLAYER_SIZE } from './config.js';
 import { getBlockMaterials, isTexturesReady } from './textures.js';
+import { isSeedReady } from './noise.js';
 import { generateTerrain } from './worldgen.js';
 import { loadSavedChunk, saveChunkToStorage } from './save.js';
 
@@ -168,7 +169,7 @@ function buildChunk(cx, cz) {
 }
 
 export function updateChunks() {
-  if (!isTexturesReady()) return;
+  if (!isTexturesReady() || !isSeedReady()) return;
   const cx = Math.floor(camera.position.x / CHUNK_SIZE);
   const cz = Math.floor(camera.position.z / CHUNK_SIZE);
   const needed = new Set();

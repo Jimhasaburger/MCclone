@@ -1,8 +1,11 @@
 import JSZip from 'jszip';
 import { CHUNK_SIZE, CHUNK_HEIGHT } from './config.js';
+import { getSeed } from './noise.js';
 
 const DB_NAME = 'mcworld';
 const STORE = 'chunks';
+const META_STORE = 'meta';
+const SEED_KEY = 'seed';
 
 const BASE71_CHARS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@$%?&<()';
 
@@ -47,9 +50,10 @@ let db;
 function openDB() {
   return new Promise((resolve, reject) => {
     if (db) return resolve(db);
-    const req = indexedDB.open(DB_NAME, 1);
+    const req = indexedDB.open(DB_NAME, 2);
     req.onupgradeneeded = () => {
-      req.result.createObjectStore(STORE);
+      if (!req.result.objectStoreNames.contains(STORE)) req.result.createObjectStore(STORE);
+      if (!req.result.objectStoreNames.contains(META_STORE)) req.result.createObjectStore(META_STORE);
     };
     req.onsuccess = () => {
       db = req.result;
@@ -115,6 +119,17 @@ export async function saveChunkToStorage(cx, cz, blocks) {
   await idbRequest(d.transaction(STORE, 'readwrite').objectStore(STORE).put(serializeBlocks(cx, cz, blocks), chunkKey(cx, cz)));
 }
 
+export async function getSavedSeed() {
+  const d = await openDB();
+  const v = await idbRequest(d.transaction(META_STORE).objectStore(META_STORE).get(SEED_KEY));
+  return v === undefined ? null : v;
+}
+
+export async function saveSeed(seed) {
+  const d = await openDB();
+  await idbRequest(d.transaction(META_STORE, 'readwrite').objectStore(META_STORE).put(seed, SEED_KEY));
+}
+
 export async function getAllSavedChunks() {
   const d = await openDB();
   const store = d.transaction(STORE).objectStore(STORE);
@@ -129,11 +144,13 @@ export async function getAllSavedChunks() {
 export async function clearSavedChunks() {
   const d = await openDB();
   await idbRequest(d.transaction(STORE, 'readwrite').objectStore(STORE).clear());
+  await idbRequest(d.transaction(META_STORE, 'readwrite').objectStore(META_STORE).clear());
 }
 
 export async function exportWorld() {
   const saved = await getAllSavedChunks();
   const zip = new JSZip();
+  zip.file('seed.txt', String(getSeed()));
   for (const c of saved) {
     zip.file(`${c.cx}-${c.cz}.txt`, c.data);
   }
@@ -151,6 +168,12 @@ export async function importWorld(file) {
   const zip = await JSZip.loadAsync(file);
   const names = Object.keys(zip.files);
   const chunks = [];
+  let seed = null;
+  if (zip.files['seed.txt']) {
+    const text = await zip.files['seed.txt'].async('string');
+    const n = Number(text.trim());
+    if (Number.isFinite(n)) seed = n >>> 0;
+  }
   for (const name of names) {
     const m = name.match(/^(-?\d+)-(-?\d+)\.txt$/);
     if (!m) continue;
@@ -168,7 +191,7 @@ export async function importWorld(file) {
     tx.oncomplete = resolve;
     tx.onerror = () => reject(tx.error);
   });
-  return chunks;
+  return { chunks, seed };
 }
 
 export function initSaveControls(onImport, onReset) {
@@ -196,8 +219,8 @@ export function initSaveControls(onImport, onReset) {
     input.value = '';
     if (!file) return;
     try {
-      const chunks = await importWorld(file);
-      onImport(chunks);
+      const result = await importWorld(file);
+      onImport(result);
     } catch (err) {
       console.error('Failed to import world', err);
     }

@@ -4,9 +4,9 @@ import { initWorld, updateChunks, isWorldReady } from './world.js';
 import { initPlayer, updatePlayer, isPlayerSpawned } from './player.js';
 import { initBlocks, updateOutline } from './blocks.js';
 import { initUI, setFPS, hideLoading, refreshHotbar } from './ui.js';
-import { initSaveControls, clearSavedChunks } from './save.js';
+import { initSaveControls, clearSavedChunks, getSavedSeed, saveSeed } from './save.js';
 import { reloadWorld, saveAllLoadedChunks } from './world.js';
-import { setSeed, newSeed } from './noise.js';
+import { setSeed, newSeed, getSeed } from './noise.js';
 import { loadSounds } from './sounds.js';
 import { loadTreeDefs } from './worldgen.js';
 
@@ -33,17 +33,32 @@ initUI(renderer.domElement);
 initPlayer(camera, renderer.domElement);
 initBlocks(scene, camera, renderer.domElement);
 initSaveControls(
-  () => reloadWorld(),
+  async ({ seed }) => {
+    if (seed !== null) {
+      setSeed(seed);
+      await saveSeed(seed);
+    }
+    reloadWorld();
+  },
   () => {
-    setSeed(newSeed());
-    clearSavedChunks().then(() => reloadWorld());
+    const seed = newSeed();
+    setSeed(seed);
+    clearSavedChunks().then(() => {
+      saveSeed(seed);
+      reloadWorld();
+    });
   }
 );
-Promise.all([loadTextures(), loadSounds(), loadTreeDefs()]).then(() => {
+Promise.all([loadTextures(), loadSounds(), loadTreeDefs(), restoreSeed()]).then(() => {
   refreshHotbar();
   updateChunks();
   waitForReady();
 });
+
+async function restoreSeed() {
+  const saved = await getSavedSeed();
+  setSeed(saved === null ? 0 : saved);
+}
 
 function waitForReady() {
   if (isWorldReady() && isPlayerSpawned()) {
