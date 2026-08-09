@@ -103,16 +103,33 @@ export function generateTerrain(cx, cz, grid) {
   generateTrees(grid, ox, oz, surface);
 }
 
-function placeLocal(grid, wx, y, wz, id) {
+function rollTree(wx, wz) {
+  for (let di = 0; di < treeDefs.length; di++) {
+    const def = treeDefs[di];
+    const r = rand2D(wx * 3 + di * 7, wz * 5 + di * 11);
+    if (r * 100 < def.chance) return def;
+  }
+  return null;
+}
+
+function maxTreeRadius() {
+  return Math.max(
+    1,
+    ...treeDefs.map(d => ((d.leaves && d.leaves.radius) || 2) + Math.floor(((d.trunkWidth || 1) - 1) / 2))
+  ) + 1;
+}
+
+function placeLocal(grid, ox, oz, wx, y, wz, id) {
   if (y < 0 || y >= CHUNK_HEIGHT) return;
-  const lx = ((wx % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
-  const lz = ((wz % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+  const lx = wx - ox;
+  const lz = wz - oz;
+  if (lx < 0 || lx >= CHUNK_SIZE || lz < 0 || lz >= CHUNK_SIZE) return;
   const base = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT;
   if (grid[base + y] !== 0) return;
   grid[base + y] = id;
 }
 
-function placeTree(grid, wx, groundY, wz, def) {
+function placeTree(grid, ox, oz, wx, groundY, wz, def) {
   const trunkMin = Math.min(def.trunkHeight[0], def.trunkHeight[1]);
   const trunkMax = Math.max(def.trunkHeight[0], def.trunkHeight[1]);
   const trunkHeight = trunkMin + Math.floor(rand2D(wx * 13, wz * 17) * (trunkMax - trunkMin + 1));
@@ -127,7 +144,7 @@ function placeTree(grid, wx, groundY, wz, def) {
   for (let dx = 0; dx < width; dx++) {
     for (let dz = 0; dz < width; dz++) {
       for (let y = groundY + 1; y <= trunkTopY; y++) {
-        placeLocal(grid, wx + dx, y, wz + dz, ids.log);
+        placeLocal(grid, ox, oz, wx + dx, y, wz + dz, ids.log);
       }
     }
   }
@@ -138,31 +155,38 @@ function placeTree(grid, wx, groundY, wz, def) {
     for (let dx = -r; dx <= r; dx++) {
       for (let dz = -r; dz <= r; dz++) {
         if (dx * dx + dz * dz > (r + 0.5) * (r + 0.5)) continue;
-        placeLocal(grid, wx + half + dx, y, wz + half + dz, ids.leaves);
+        placeLocal(grid, ox, oz, wx + half + dx, y, wz + half + dz, ids.leaves);
       }
     }
   }
-  placeLocal(grid, wx + half, trunkTopY + leafHeight, wz + half, ids.leaves);
+  placeLocal(grid, ox, oz, wx + half, trunkTopY + leafHeight, wz + half, ids.leaves);
 }
 
 function generateTrees(grid, ox, oz, surface) {
   if (!treeDefs.length || !ids.log || !ids.leaves) return;
-  const margin = 4;
-  for (let lx = margin; lx < CHUNK_SIZE - margin; lx++) {
-    for (let lz = margin; lz < CHUNK_SIZE - margin; lz++) {
+  const reach = maxTreeRadius();
+
+  for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+    for (let lz = 0; lz < CHUNK_SIZE; lz++) {
       const wx = ox + lx;
       const wz = oz + lz;
       const groundY = surface[lx * CHUNK_SIZE + lz];
       const groundId = grid[(lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT + groundY];
       if (groundId !== ids.grass && groundId !== ids.dirt) continue;
-      for (let di = 0; di < treeDefs.length; di++) {
-        const def = treeDefs[di];
-        const r = rand2D(wx * 3 + di * 7, wz * 5 + di * 11);
-        if (r * 100 < def.chance) {
-          placeTree(grid, wx, groundY, wz, def);
-          break;
-        }
-      }
+      const def = rollTree(wx, wz);
+      if (def) placeTree(grid, ox, oz, wx, groundY, wz, def);
+    }
+  }
+
+  for (let dx = -reach; dx < CHUNK_SIZE + reach; dx++) {
+    for (let dz = -reach; dz < CHUNK_SIZE + reach; dz++) {
+      if (dx >= 0 && dx < CHUNK_SIZE && dz >= 0 && dz < CHUNK_SIZE) continue;
+      const wx = ox + dx;
+      const wz = oz + dz;
+      const def = rollTree(wx, wz);
+      if (!def) continue;
+      const groundY = getHeight(wx, wz) - 1;
+      placeTree(grid, ox, oz, wx, groundY, wz, def);
     }
   }
 }
