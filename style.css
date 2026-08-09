@@ -260,6 +260,16 @@ canvas {
   pointer-events: none;
 }
 
+.inv-drag-icon {
+  position: fixed;
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 50;
+  transform: translate(-50%, -50%);
+}
+
 #inventory .inv-scrollbar {
   background: transparent; /* Remove the dark grey box background */
   border-radius: 4px;

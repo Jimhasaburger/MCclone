@@ -42,7 +42,7 @@ let rowOffset = 0;
 let maxRowOffset = 0;
 let open = false;
 let dragging = false;
-let slotDragging = false;
+let dragItem = null;
 let domElement;
 
 export function initInventory(canvasRef) {
@@ -60,10 +60,6 @@ export function initInventory(canvasRef) {
     } else if (e.code === 'Escape' && open) {
       close();
     }
-  });
-
-  document.addEventListener('mouseup', () => {
-    slotDragging = false;
   });
 
   document.addEventListener(
@@ -112,14 +108,9 @@ function buildMenu() {
     icon.className = 'inv-item-icon';
     el.appendChild(icon);
 
-    // Click and drag-to-place support like Minecraft creative inventory
     el.addEventListener('mousedown', (e) => {
-      slotDragging = true;
-      onItemAction(i);
+      startDrag(i, e);
       e.preventDefault();
-    });
-    el.addEventListener('mouseenter', () => {
-      if (slotDragging) onItemAction(i);
     });
 
     grid.appendChild(el);
@@ -152,21 +143,15 @@ function buildMenu() {
   for (let i = 0; i < 9; i++) {
     const el = document.createElement('div');
     el.className = 'inv-hotbar-slot';
+    el.dataset.index = String(i);
     el.style.left = `${i * SPACING * SCALE}px`;
     el.style.width = `${SLOT_SIZE * SCALE}px`;
     el.style.height = `${SLOT_SIZE * SCALE}px`;
-    
-    const bgImg = document.createElement('img');
-    bgImg.className = 'inv-hotbar-bg';
-    bgImg.src = 'assets/textures/ui/hotbarslot.png';
-    
+
     const icon = document.createElement('img');
     icon.className = 'inv-hotbar-icon';
-    
-    el.appendChild(bgImg);
+
     el.appendChild(icon);
-    
-    // Removed selected.png element entirely
     el.addEventListener('click', () => setSelectedSlot(i));
     hotbar.appendChild(el);
     hotbarSlotEls.push({ el, icon });
@@ -195,13 +180,67 @@ function displayName(def) {
     .join(' ');
 }
 
-function onItemAction(i) {
+function startDrag(i, e) {
   const idx = rowOffset * COLS + i;
   const item = items[idx];
   if (!item) return;
-  setHotbarSlot(getSelectedSlot(), item.id);
+  dragItem = { id: item.id, name: item.name, icon: item.icon };
+  const ghost = document.createElement('img');
+  ghost.className = 'inv-drag-icon';
+  ghost.src = item.icon;
+  document.body.appendChild(ghost);
+  dragItem.el = ghost;
   showText(item.name);
+  updateDrag(e);
+  document.addEventListener('mousemove', updateDrag);
+  document.addEventListener('mouseup', endDrag);
+}
+
+function updateDrag(e) {
+  if (!dragItem || !dragItem.el) return;
+  dragItem.el.style.left = `${e.clientX}px`;
+  dragItem.el.style.top = `${e.clientY}px`;
+}
+
+function endDrag(e) {
+  document.removeEventListener('mousemove', updateDrag);
+  document.removeEventListener('mouseup', endDrag);
+  if (!dragItem) return;
+  const item = dragItem;
+  const el = dragItem.el;
+  dragItem = null;
+  dropItem(e, item, el);
+}
+
+function dropItem(e, item, el) {
+  const target = document.elementFromPoint(e.clientX, e.clientY);
+  const slotEl = target && target.closest('.inv-hotbar-slot');
+  if (slotEl) {
+    setHotbarSlot(Number(slotEl.dataset.index), item.id);
+  } else {
+    const idx = hotbarIndexAt(e.clientX, e.clientY);
+    if (idx !== -1) setHotbarSlot(idx, item.id);
+  }
+  if (el) el.remove();
   renderHotbar();
+}
+
+function hotbarIndexAt(x, y) {
+  const slots = menuEl.querySelectorAll('.inv-hotbar-slot');
+  if (!slots.length) return -1;
+  const first = slots[0].getBoundingClientRect();
+  const last = slots[slots.length - 1].getBoundingClientRect();
+  if (y < first.top - 6 || y > first.bottom + 6 || x < first.left || x > last.right) return -1;
+  const perSlot = (last.right - first.left) / slots.length;
+  return Math.min(slots.length - 1, Math.max(0, Math.floor((x - first.left) / perSlot)));
+}
+
+function cancelDrag() {
+  if (!dragItem) return;
+  if (dragItem.el) dragItem.el.remove();
+  document.removeEventListener('mousemove', updateDrag);
+  document.removeEventListener('mouseup', endDrag);
+  dragItem = null;
 }
 
 function renderScroll() {
@@ -213,17 +252,22 @@ function renderScroll() {
     s.el.classList.toggle('empty', !item);
   });
 
+  const totalRows = Math.max(1, Math.ceil(items.length / COLS));
+  const canScroll = totalRows > ROWS;
   const trackScaledHeight = TRACK_HEIGHT * SCALE;
-  const thumbScaledHeight = THUMB_HEIGHT * SCALE;
+  const thumbScaledHeight = canScroll
+    ? Math.round(Math.max(THUMB_HEIGHT * SCALE, trackScaledHeight * (ROWS / totalRows)))
+    : trackScaledHeight;
   const maxTop = trackScaledHeight - thumbScaledHeight;
   const offs = maxRowOffset > 0 ? rowOffset / maxRowOffset : 0;
-  
+
+  thumbEl.style.display = canScroll ? 'block' : 'none';
+  thumbEl.style.height = `${thumbScaledHeight}px`;
+  thumbEl.style.backgroundSize = `${THUMB_WIDTH * 2 * SCALE}px ${thumbScaledHeight}px`;
   thumbEl.style.top = `${Math.round(offs * maxTop)}px`;
-  
+
   // Use active/inactive texture states from the scrollbar sprite sheet
-  thumbEl.style.backgroundPosition = (dragging || maxRowOffset === 0) 
-    ? `-${THUMB_WIDTH * SCALE}px 0px` 
-    : `0px 0px`;
+  thumbEl.style.backgroundPosition = dragging ? `-${THUMB_WIDTH * SCALE}px 0px` : `0px 0px`;
 }
 
 function renderHotbar() {
@@ -239,8 +283,8 @@ function renderHotbar() {
   });
 }
 
-function scrollByRows(dir) {
-  rowOffset = Math.max(0, Math.min(maxRowOffset, rowOffset + dir));
+function scrollByRows(dir, page = 1) {
+  rowOffset = Math.max(0, Math.min(maxRowOffset, rowOffset + dir * page));
   renderScroll();
 }
 
@@ -251,11 +295,8 @@ function setRowFromRatio(rel) {
 
 function onTrackClick(e) {
   if (e.target === thumbEl || maxRowOffset <= 0) return;
-  const rect = trackEl.getBoundingClientRect();
-  const thumbScaledHeight = THUMB_HEIGHT * SCALE;
-  const maxTop = rect.height - thumbScaledHeight;
-  const rel = (e.clientY - rect.top - thumbScaledHeight / 2) / maxTop;
-  setRowFromRatio(rel);
+  const thumbTop = thumbEl.getBoundingClientRect().top;
+  scrollByRows(e.clientY < thumbTop ? -1 : 1, ROWS);
 }
 
 function onThumbDown(e) {
@@ -275,7 +316,7 @@ function onThumbMove(e) {
 
 function updateThumbDrag(e) {
   const rect = trackEl.getBoundingClientRect();
-  const thumbScaledHeight = THUMB_HEIGHT * SCALE;
+  const thumbScaledHeight = thumbEl.getBoundingClientRect().height;
   const maxTop = rect.height - thumbScaledHeight;
   const rel = (e.clientY - rect.top - thumbScaledHeight / 2) / maxTop;
   setRowFromRatio(rel);
@@ -299,7 +340,7 @@ function openMenu() {
 
 function close() {
   open = false;
-  slotDragging = false;
+  cancelDrag();
   menuEl.style.display = 'none';
   if (domElement) domElement.requestPointerLock();
 }

@@ -10,6 +10,7 @@ const keybinds = [
   ['I', 'Import world (zip)'],
   ['R', 'Regenerate world (new seed)'],
   ['1-9 / Scroll', 'Select hotbar slot'],
+  ['E', 'Open inventory'],
   ['Tab', 'Toggle menu'],
 ];
 
