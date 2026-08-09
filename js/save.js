@@ -171,7 +171,7 @@ export async function importWorld(file) {
   return chunks;
 }
 
-export function initSaveControls(onImport) {
+export function initSaveControls(onImport, onReset) {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = '.zip,application/zip';
@@ -185,6 +185,9 @@ export function initSaveControls(onImport) {
     } else if (e.code === 'KeyI') {
       e.preventDefault();
       input.click();
+    } else if (e.code === 'KeyR') {
+      e.preventDefault();
+      if (onReset) onReset();
     }
   });
 

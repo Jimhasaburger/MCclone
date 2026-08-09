@@ -44,3 +44,35 @@ canvas {
   background: #000;
   z-index: 20;
 }
+
+#menu {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 24px 32px;
+  border-radius: 8px;
+  font-family: 'GameFont', monospace;
+  min-width: 340px;
+  z-index: 30;
+}
+
+#menu h1 {
+  font-size: 20px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.menu-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 4px 0;
+  font-size: 14px;
+}
+
+.menu-key {
+  color: #ffd700;
+}

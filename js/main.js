@@ -4,8 +4,9 @@ import { initWorld, updateChunks } from './world.js';
 import { initPlayer, updatePlayer } from './player.js';
 import { initBlocks, updateOutline } from './blocks.js';
 import { initUI, setFPS, hideLoading } from './ui.js';
-import { initSaveControls } from './save.js';
+import { initSaveControls, clearSavedChunks } from './save.js';
 import { reloadWorld, saveAllLoadedChunks } from './world.js';
+import { setSeed, newSeed } from './noise.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xc0d9e8);
@@ -26,10 +27,16 @@ directionalLight.position.set(10, 15, 10);
 scene.add(directionalLight);
 
 initWorld(scene, camera);
-initUI();
+initUI(renderer.domElement);
 initPlayer(camera, renderer.domElement);
 initBlocks(scene, camera, renderer.domElement);
-initSaveControls(() => reloadWorld());
+initSaveControls(
+  () => reloadWorld(),
+  () => {
+    setSeed(newSeed());
+    clearSavedChunks().then(() => reloadWorld());
+  }
+);
 loadTextures().then(() => {
   hideLoading();
   updateChunks();

@@ -1,5 +1,15 @@
+let seed = 0;
+
+export function setSeed(s) {
+  seed = s >>> 0;
+}
+
+export function newSeed() {
+  return Math.floor(Math.random() * 0x7fffffff);
+}
+
 function hash2D(x, y) {
-  let h = x * 374761393 + y * 668265263;
+  let h = x * 374761393 + y * 668265263 + seed * 1103515245;
   h = (h ^ (h >> 13)) * 1274126177;
   return (h ^ (h >> 16)) / 2147483647;
 }
