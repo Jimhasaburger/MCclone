@@ -1,0 +1,14 @@
+{
+  "id": 7,
+  "name": "leaves",
+  "layer": "",
+  "unbreakable": false,
+  "sides": {
+    "top": "assets/textures/blocks/Leaves.png",
+    "bottom": "assets/textures/blocks/Leaves.png",
+    "north": "assets/textures/blocks/Leaves.png",
+    "south": "assets/textures/blocks/Leaves.png",
+    "east": "assets/textures/blocks/Leaves.png",
+    "west": "assets/textures/blocks/Leaves.png"
+  }
+}

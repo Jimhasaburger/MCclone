@@ -1,13 +1,14 @@
 import * as THREE from 'three';
 import { loadTextures } from './textures.js';
-import { initWorld, updateChunks } from './world.js';
-import { initPlayer, updatePlayer } from './player.js';
+import { initWorld, updateChunks, isWorldReady } from './world.js';
+import { initPlayer, updatePlayer, isPlayerSpawned } from './player.js';
 import { initBlocks, updateOutline } from './blocks.js';
 import { initUI, setFPS, hideLoading, refreshHotbar } from './ui.js';
 import { initSaveControls, clearSavedChunks } from './save.js';
 import { reloadWorld, saveAllLoadedChunks } from './world.js';
 import { setSeed, newSeed } from './noise.js';
 import { loadSounds } from './sounds.js';
+import { loadTreeDefs } from './worldgen.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xc0d9e8);
@@ -38,11 +39,19 @@ initSaveControls(
     clearSavedChunks().then(() => reloadWorld());
   }
 );
-Promise.all([loadTextures(), loadSounds()]).then(() => {
-  hideLoading();
+Promise.all([loadTextures(), loadSounds(), loadTreeDefs()]).then(() => {
   refreshHotbar();
   updateChunks();
+  waitForReady();
 });
+
+function waitForReady() {
+  if (isWorldReady() && isPlayerSpawned()) {
+    hideLoading();
+  } else {
+    requestAnimationFrame(waitForReady);
+  }
+}
 
 window.addEventListener('beforeunload', saveAllLoadedChunks);
 

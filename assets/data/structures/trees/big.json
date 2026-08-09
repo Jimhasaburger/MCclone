@@ -1,0 +1,10 @@
+{
+  "chance": 8,
+  "trunkHeight": [6, 9],
+  "trunkWidth": 1,
+  "leaves": {
+    "radius": 3,
+    "topRadius": 1,
+    "height": 3
+  }
+}

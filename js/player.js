@@ -72,6 +72,10 @@ export function initPlayer(cameraRef, domElement) {
   });
 }
 
+export function isPlayerSpawned() {
+  return spawned;
+}
+
 export function updatePlayer(dt) {
   snapToSurface();
 

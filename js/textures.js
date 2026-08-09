@@ -45,7 +45,7 @@ async function loadBlockDef(name) {
       tex.magFilter = THREE.NearestFilter;
       tex.wrapS = THREE.RepeatWrapping;
       tex.wrapT = THREE.RepeatWrapping;
-      mats[i] = new THREE.MeshStandardMaterial({ map: tex });
+      mats[i] = new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.5 });
     })
   );
   blockMaterials.set(data.id, mats);

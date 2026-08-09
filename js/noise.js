@@ -46,3 +46,10 @@ export function getHeight(wx, wz) {
   const n = fbm(wx * 0.025, wz * 0.025);
   return Math.floor(n * 8 + 4);
 }
+
+export function rand2D(x, z) {
+  let h = x * 374761393 + z * 668265263 + seed * 1103515245;
+  h = Math.imul(h ^ (h >>> 16), 1274126177);
+  h = h ^ (h >>> 16);
+  return (h >>> 0) / 4294967296;
+}

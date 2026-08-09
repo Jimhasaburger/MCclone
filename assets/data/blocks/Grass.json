@@ -1,5 +1,6 @@
 {
   "id": 1,
+  "name": "grass",
   "layer": 1,
   "unbreakable": false,
   "sides": {

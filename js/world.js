@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { CHUNK_SIZE, CHUNK_HEIGHT, RENDER_DISTANCE, PLAYER_HEIGHT, PLAYER_SIZE } from './config.js';
-import { getHeight } from './noise.js';
 import { getBlockMaterials, getBlockDefs } from './textures.js';
+import { generateTerrain } from './worldgen.js';
 import { loadSavedChunk, saveChunkToStorage } from './save.js';
 
 const chunks = new Map();
@@ -16,6 +16,16 @@ const GRID_SIZE = CHUNK_SIZE * CHUNK_HEIGHT * CHUNK_SIZE;
 let scene;
 let camera;
 let worldVersion = 0;
+let pendingLoads = 0;
+let worldReady = false;
+
+function checkWorldReady() {
+  if (pendingLoads === 0) worldReady = true;
+}
+
+export function isWorldReady() {
+  return worldReady;
+}
 
 export function initWorld(sceneRef, cameraRef) {
   scene = sceneRef;
@@ -95,76 +105,10 @@ async function loadChunk(cx, cz) {
     const grid = getGrid(cx, cz);
     for (const [x, y, z, id] of saved) grid[chunkIndex(x, y, z)] = id;
   } else {
-    generateTerrain(cx, cz);
+    generateTerrain(cx, cz, getGrid(cx, cz));
     saveChunk(cx, cz);
   }
   loadedChunks.add(key);
-}
-
-function blockIdAtLayer(layer) {
-  const defs = getBlockDefs();
-  for (const def of defs) {
-    if (def.layers.includes(layer)) return def.id;
-  }
-  let below = null;
-  let belowMin = -Infinity;
-  for (const def of defs) {
-    const min = Math.min(...def.layers);
-    if (min < layer && min > belowMin) {
-      belowMin = min;
-      below = def;
-    }
-  }
-  if (below) return below.id;
-  let deepest = null;
-  for (const def of defs) {
-    if (!deepest || Math.min(...def.layers) < Math.min(...deepest.layers)) deepest = def;
-  }
-  return deepest ? deepest.id : 1;
-}
-
-function lockedBlockDef(defs) {
-  let best = null;
-  for (const def of defs) {
-    if (def.locktosety && (!best || Math.min(...def.layers) < Math.min(...best.layers))) best = def;
-  }
-  return best;
-}
-
-function fillBlockId(defs) {
-  let best = null;
-  for (const def of defs) {
-    if (def.locktosety) continue;
-    if (!best || Math.min(...def.layers) < Math.min(...best.layers)) best = def;
-  }
-  return best ? best.id : 0;
-}
-
-function generateTerrain(cx, cz) {
-  const grid = getGrid(cx, cz);
-  const ox = cx * CHUNK_SIZE;
-  const oz = cz * CHUNK_SIZE;
-  const defs = getBlockDefs();
-  const locked = lockedBlockDef(defs);
-  const lockedId = locked ? locked.id : 0;
-  const lockedFloorY = locked ? locked.layer : 0;
-  const fillId = fillBlockId(defs);
-  for (let lx = 0; lx < CHUNK_SIZE; lx++) {
-    for (let lz = 0; lz < CHUNK_SIZE; lz++) {
-      const h = getHeight(ox + lx, oz + lz);
-      const base = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT;
-      for (let y = 0; y < h; y++) {
-        let id;
-        if (lockedId && y < lockedFloorY) {
-          id = lockedId;
-        } else {
-          id = blockIdAtLayer(y - h + 2);
-          if (lockedId && id === lockedId) id = fillId;
-        }
-        grid[base + y] = id;
-      }
-    }
-  }
 }
 
 function blockIsExposed(grid, lx, y, lz) {
@@ -236,17 +180,23 @@ export function updateChunks() {
       needed.add(key);
       if (chunks.has(key) || loading.has(key)) continue;
       loading.add(key);
+      pendingLoads++;
       loadChunk(cx + dx, cz + dz)
         .catch(err => {
           console.error('Failed to load chunk', key, err);
-          generateTerrain(cx + dx, cz + dz);
+          generateTerrain(cx + dx, cz + dz, getGrid(cx + dx, cz + dz));
         })
         .then(() => {
           loading.delete(key);
-          if (ver !== worldVersion || chunks.has(key) || !needed.has(key)) return;
+          pendingLoads--;
+          if (ver !== worldVersion || chunks.has(key) || !needed.has(key)) {
+            checkWorldReady();
+            return;
+          }
           const meshes = buildChunk(cx + dx, cz + dz);
           if (meshes) meshes.forEach(m => scene.add(m));
           chunks.set(key, meshes);
+          checkWorldReady();
         });
     }
   }
@@ -258,6 +208,8 @@ export function updateChunks() {
       chunks.delete(key);
     }
   }
+
+  checkWorldReady();
 }
 
 export function rebuildChunk(wx, wz) {
@@ -281,6 +233,8 @@ export function saveAllLoadedChunks() {
 
 export function reloadWorld() {
   worldVersion++;
+  worldReady = false;
+  pendingLoads = 0;
   for (const [key, meshes] of chunks) {
     if (meshes) meshes.forEach(m => scene.remove(m));
   }
