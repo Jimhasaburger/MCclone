@@ -286,25 +286,21 @@ export function isSolid(wx, wy, wz) {
 }
 
 export function collidesAt(wx, wy, wz) {
-  const y0 = wy;
-  const y1 = wy + PLAYER_HEIGHT;
-  const r2 = PLAYER_SIZE * PLAYER_SIZE;
-  for (let dx = -1; dx <= 1; dx++) {
-    for (let dz = -1; dz <= 1; dz++) {
-      const cx = Math.floor(wx) + dx;
-      const cz = Math.floor(wz) + dz;
-      for (let yy = Math.floor(y0); yy <= Math.floor(y1); yy++) {
-        if (!isSolid(cx, yy, cz)) continue;
-        let ddx = 0;
-        if (wx < cx) ddx = cx - wx;
-        else if (wx > cx + 1) ddx = wx - (cx + 1);
-        let ddz = 0;
-        if (wz < cz) ddz = cz - wz;
-        else if (wz > cz + 1) ddz = wz - (cz + 1);
-        let ddy = 0;
-        if (y1 < yy) ddy = yy - y1;
-        else if (y0 > yy + 1) ddy = y0 - (yy + 1);
-        if (ddx * ddx + ddz * ddz + ddy * ddy <= r2) return true;
+  const px0 = wx - PLAYER_SIZE;
+  const px1 = wx + PLAYER_SIZE;
+  const py0 = wy;
+  const py1 = wy + PLAYER_HEIGHT;
+  const pz0 = wz - PLAYER_SIZE;
+  const pz1 = wz + PLAYER_SIZE;
+  for (let bx = Math.floor(px0); bx <= Math.floor(px1); bx++) {
+    for (let by = Math.floor(py0); by <= Math.floor(py1); by++) {
+      for (let bz = Math.floor(pz0); bz <= Math.floor(pz1); bz++) {
+        if (!isSolid(bx, by, bz)) continue;
+        if (
+          px0 < bx + 1 && px1 > bx &&
+          py0 < by + 1 && py1 > by &&
+          pz0 < bz + 1 && pz1 > bz
+        ) return true;
       }
     }
   }

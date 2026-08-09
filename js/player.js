@@ -96,7 +96,7 @@ export function updatePlayer(dt) {
       playerPos.y = Math.floor(playerPos.y) + 1;
       onGround = true;
     } else {
-      playerPos.y = Math.ceil(playerPos.y + PLAYER_HEIGHT) - PLAYER_HEIGHT - 0.001;
+      playerPos.y = Math.floor(playerPos.y + PLAYER_HEIGHT) - PLAYER_HEIGHT;
     }
     playerVel.y = 0;
   }
