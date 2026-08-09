@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { CHUNK_SIZE, CHUNK_HEIGHT, RENDER_DISTANCE, PLAYER_HEIGHT, PLAYER_SIZE } from './config.js';
+import { getHeight } from './noise.js';
 import { getBlockMaterials, getBlockDefs } from './textures.js';
 import { loadSavedChunk, saveChunkToStorage } from './save.js';
 
@@ -139,8 +140,6 @@ function fillBlockId(defs) {
   return best ? best.id : 0;
 }
 
-const TERRAIN_HEIGHT = 35;
-
 function generateTerrain(cx, cz) {
   const grid = getGrid(cx, cz);
   const ox = cx * CHUNK_SIZE;
@@ -152,19 +151,34 @@ function generateTerrain(cx, cz) {
   const fillId = fillBlockId(defs);
   for (let lx = 0; lx < CHUNK_SIZE; lx++) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
+      const h = getHeight(ox + lx, oz + lz);
       const base = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT;
-      for (let y = 0; y < TERRAIN_HEIGHT; y++) {
+      for (let y = 0; y < h; y++) {
         let id;
         if (lockedId && y < lockedFloorY) {
           id = lockedId;
         } else {
-          id = blockIdAtLayer(y - TERRAIN_HEIGHT + 2);
+          id = blockIdAtLayer(y - h + 2);
           if (lockedId && id === lockedId) id = fillId;
         }
         grid[base + y] = id;
       }
     }
   }
+}
+
+function blockIsExposed(grid, lx, y, lz) {
+  if (y <= 0 || y >= CHUNK_HEIGHT - 1) return true;
+  if (lx <= 0 || lx >= CHUNK_SIZE - 1 || lz <= 0 || lz >= CHUNK_SIZE - 1) return true;
+  const base = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT;
+  return (
+    grid[base + y + 1] === 0 ||
+    grid[base + y - 1] === 0 ||
+    grid[base + y + CHUNK_HEIGHT] === 0 ||
+    grid[base + y - CHUNK_HEIGHT] === 0 ||
+    grid[base + y + CHUNK_HEIGHT * CHUNK_SIZE] === 0 ||
+    grid[base + y - CHUNK_HEIGHT * CHUNK_SIZE] === 0
+  );
 }
 
 function buildChunk(cx, cz) {
@@ -179,7 +193,7 @@ function buildChunk(cx, cz) {
       const base = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT;
       for (let y = 0; y < CHUNK_HEIGHT; y++) {
         const id = grid[base + y];
-        if (!id) continue;
+        if (!id || !blockIsExposed(grid, lx, y, lz)) continue;
         let g = groups.get(id);
         if (!g) {
           g = { positions: [], worldPositions: [] };
