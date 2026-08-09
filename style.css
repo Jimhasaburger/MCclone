@@ -76,6 +76,19 @@ canvas {
   display: block;
 }
 
+.hotbar-slot img.hotbar-icon {
+  display: none;
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 32px;
+  height: 32px;
+}
+
+.hotbar-slot.filled img.hotbar-icon {
+  display: block;
+}
+
 #loading {
   position: fixed;
   inset: 0;

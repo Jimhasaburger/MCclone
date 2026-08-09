@@ -1,5 +1,7 @@
 const fontUrl = 'assets/textures/font/font.ttf';
 
+import { getBlockDefs, getBlockIconPath } from './textures.js';
+
 const keybinds = [
   ['W A S D', 'Move'],
   ['Space', 'Jump'],
@@ -19,6 +21,7 @@ let canvas;
 let hotbarEl;
 let selectedSlot = 0;
 const slots = [];
+const slotBlocks = [];
 
 export function initUI(canvasRef) {
   canvas = canvasRef;
@@ -69,17 +72,36 @@ function buildHotbar() {
     const slot = document.createElement('img');
     slot.src = 'assets/textures/ui/hotbarslot.png';
     slot.alt = '';
+    const icon = document.createElement('img');
+    icon.className = 'hotbar-icon';
+    icon.alt = '';
     const selected = document.createElement('img');
     selected.className = 'hotbar-selected';
     selected.src = 'assets/textures/ui/selected.png';
     selected.alt = '';
     wrap.appendChild(slot);
+    wrap.appendChild(icon);
     wrap.appendChild(selected);
     hotbarEl.appendChild(wrap);
     slots.push(wrap);
   }
   document.body.appendChild(hotbarEl);
   selectSlot(0);
+}
+
+export function refreshHotbar() {
+  const defs = getBlockDefs().filter(d => !d.unbreakable);
+  slots.forEach((wrap, i) => {
+    const icon = wrap.querySelector('.hotbar-icon');
+    const def = defs[i];
+    slotBlocks[i] = def ? def.id : null;
+    wrap.classList.toggle('filled', Boolean(def));
+    if (def) {
+      icon.src = getBlockIconPath(def.id) || '';
+    } else {
+      icon.src = '';
+    }
+  });
 }
 
 function selectSlot(i) {
@@ -89,6 +111,10 @@ function selectSlot(i) {
 
 export function getSelectedSlot() {
   return selectedSlot;
+}
+
+export function getSelectedBlockId() {
+  return slotBlocks[selectedSlot] || null;
 }
 
 function buildMenu() {

@@ -59,6 +59,19 @@ export function isUnbreakable(id) {
   return Boolean(blockDefs.get(id)?.unbreakable);
 }
 
+export function getBlockIconPath(id) {
+  const def = blockDefs.get(id);
+  if (!def || !def.sides) return null;
+  return (
+    def.sides.north ||
+    def.sides.south ||
+    def.sides.east ||
+    def.sides.west ||
+    def.sides.top ||
+    def.sides.bottom
+  );
+}
+
 export function getBlockDefs() {
   return [...blockDefs.values()];
 }

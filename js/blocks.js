@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { CHUNK_HEIGHT, PLAYER_HEIGHT, PLAYER_SIZE } from './config.js';
 import { getChunks, rebuildChunk, hasBlock, addBlock, removeBlock, getBlockId } from './world.js';
 import { isUnbreakable } from './textures.js';
+import { getSelectedBlockId } from './ui.js';
 import { playerPos } from './player.js';
 
 const raycaster = new THREE.Raycaster();
@@ -68,6 +69,8 @@ function breakBlock() {
 function placeBlock() {
   const target = getTarget();
   if (!target) return;
+  const blockId = getSelectedBlockId();
+  if (!blockId) return;
   const center = new THREE.Vector3(target.bx + 0.5, target.by + 0.5, target.bz + 0.5);
   const rel = target.hit.point.clone().sub(center);
   const ax = Math.abs(rel.x);
@@ -85,7 +88,7 @@ function placeBlock() {
   if (hasBlock(px, py, pz)) return;
   if (blockIntersectsPlayer(px, py, pz)) return;
 
-  addBlock(px, py, pz);
+  addBlock(px, py, pz, blockId);
   rebuildChunk(px, pz);
 }
 

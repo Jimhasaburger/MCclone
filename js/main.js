@@ -3,7 +3,7 @@ import { loadTextures } from './textures.js';
 import { initWorld, updateChunks } from './world.js';
 import { initPlayer, updatePlayer } from './player.js';
 import { initBlocks, updateOutline } from './blocks.js';
-import { initUI, setFPS, hideLoading } from './ui.js';
+import { initUI, setFPS, hideLoading, refreshHotbar } from './ui.js';
 import { initSaveControls, clearSavedChunks } from './save.js';
 import { reloadWorld, saveAllLoadedChunks } from './world.js';
 import { setSeed, newSeed } from './noise.js';
@@ -39,6 +39,7 @@ initSaveControls(
 );
 loadTextures().then(() => {
   hideLoading();
+  refreshHotbar();
   updateChunks();
 });
 
