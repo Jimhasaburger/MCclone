@@ -27,32 +27,57 @@ function parseLayers(spec) {
   return layers;
 }
 
-async function loadBlockDef(name) {
-  const res = await fetch(`assets/data/blocks/${name}`);
-  const data = await res.json();
-  data.layers = parseLayers(data.layer);
-  blockDefs.set(data.id, data);
+function makeFallbackMaterial() {
+  return new THREE.MeshStandardMaterial({ color: 0x7c9c6e });
+}
 
-  const mats = FACE_ORDER.map(() => new THREE.MeshStandardMaterial({ color: 0x7c9c6e }));
-  const sides = data.sides || {};
-  await Promise.all(
-    FACE_ORDER.map(async (face, i) => {
-      const path = sides[face];
-      if (!path) return;
-      const tex = await loader.loadAsync(path);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.minFilter = THREE.NearestFilter;
-      tex.magFilter = THREE.NearestFilter;
-      tex.wrapS = THREE.RepeatWrapping;
-      tex.wrapT = THREE.RepeatWrapping;
-      mats[i] = new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.5 });
-    })
-  );
-  blockMaterials.set(data.id, mats);
+async function loadFaceMaterial(path) {
+  if (!path) return makeFallbackMaterial();
+  try {
+    const tex = await loader.loadAsync(path);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.minFilter = THREE.NearestFilter;
+    tex.magFilter = THREE.NearestFilter;
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    return new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.5 });
+  } catch (e) {
+    console.error(`Failed to load texture ${path}`, e);
+    return makeFallbackMaterial();
+  }
+}
+
+async function loadBlockDef(name, retries = 3) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(`assets/data/blocks/${name}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      data.layers = parseLayers(data.layer);
+      blockDefs.set(data.id, data);
+
+      const sides = data.sides || {};
+      const mats = await Promise.all(
+        FACE_ORDER.map(face => loadFaceMaterial(sides[face]))
+      );
+      blockMaterials.set(data.id, mats);
+      return;
+    } catch (e) {
+      if (attempt === retries) {
+        console.error(`Failed to load block def ${name} after ${retries + 1} attempts`, e);
+      } else {
+        await new Promise(r => setTimeout(r, 250 * (attempt + 1)));
+      }
+    }
+  }
 }
 
 export function getBlockMaterials(id) {
   return blockMaterials.get(id) || fallbackMats;
+}
+
+export function isTexturesReady() {
+  return blockDefs.size > 0 && blockMaterials.size >= blockDefs.size;
 }
 
 export function isUnbreakable(id) {
@@ -77,11 +102,8 @@ export function getBlockDefs() {
 }
 
 export async function loadTextures() {
-  try {
-    const res = await fetch(BLOCK_INDEX_FILE);
-    const names = await res.json();
-    await Promise.all(names.map(loadBlockDef));
-  } catch (e) {
-    console.error('Failed to load block defs', e);
-  }
+  const res = await fetch(BLOCK_INDEX_FILE);
+  if (!res.ok) throw new Error(`Failed to load block index: HTTP ${res.status}`);
+  const names = await res.json();
+  await Promise.all(names.map(name => loadBlockDef(name)));
 }
