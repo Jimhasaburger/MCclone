@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { FACE_ORDER, BLOCK_INDEX_FILE } from './config.js';
+import { FACE_ORDER, BLOCK_INDEX_FILE, DATA_VERSION } from './config.js';
 
 const fallbackMats = FACE_ORDER.map(() => new THREE.MeshStandardMaterial({ color: 0x7c9c6e }));
 
@@ -15,7 +15,7 @@ function makeFallbackMaterial() {
 async function loadFaceMaterial(path) {
   if (!path) return makeFallbackMaterial();
   try {
-    const tex = await loader.loadAsync(path);
+    const tex = await loader.loadAsync(`${path}?v=${DATA_VERSION}`);
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.minFilter = THREE.NearestFilter;
     tex.magFilter = THREE.NearestFilter;
@@ -31,7 +31,7 @@ async function loadFaceMaterial(path) {
 async function loadBlockDef(name, retries = 3) {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const res = await fetch(`assets/data/blocks/${name}`);
+      const res = await fetch(`assets/data/blocks/${name}?v=${DATA_VERSION}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       blockDefs.set(data.id, data);
@@ -109,7 +109,7 @@ export function getBlockDefs() {
 }
 
 export async function loadTextures() {
-  const res = await fetch(BLOCK_INDEX_FILE);
+  const res = await fetch(`${BLOCK_INDEX_FILE}?v=${DATA_VERSION}`);
   if (!res.ok) throw new Error(`Failed to load block index: HTTP ${res.status}`);
   const names = await res.json();
   await Promise.all(names.map(name => loadBlockDef(name)));

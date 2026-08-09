@@ -14,5 +14,8 @@
   "layers": [
     { "block": 4, "thickness": [3, 5] }
   ],
-  "fill": 2
+  "fill": 2,
+  "veins": [
+    { "block": 9, "minY": 4, "maxY": 40, "chance": 0.04, "size": [3, 7] }
+  ]
 }

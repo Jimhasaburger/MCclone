@@ -1,4 +1,4 @@
-import { CHUNK_SIZE, CHUNK_HEIGHT } from './config.js';
+import { CHUNK_SIZE, CHUNK_HEIGHT, DATA_VERSION } from './config.js';
 import { getHeight, rand2D, setHeightConfig } from './noise.js';
 
 let treeDefs = [];
@@ -6,9 +6,9 @@ let cfg = null;
 
 export async function loadWorldgen() {
   const [main, small, big] = await Promise.all([
-    fetch('assets/data/worldgen/main.json').then(r => r.json()),
-    fetch('assets/data/structures/trees/small.json').then(r => r.json()),
-    fetch('assets/data/structures/trees/big.json').then(r => r.json()),
+    fetch(`assets/data/worldgen/main.json?v=${DATA_VERSION}`).then(r => r.json()),
+    fetch(`assets/data/structures/trees/small.json?v=${DATA_VERSION}`).then(r => r.json()),
+    fetch(`assets/data/structures/trees/big.json?v=${DATA_VERSION}`).then(r => r.json()),
   ]);
   cfg = main;
   if (cfg.height) setHeightConfig(cfg.height);
@@ -37,6 +37,7 @@ export function generateTerrain(cx, cz, grid) {
     .map(l => ({ id: l.block || 0, thickness: l.thickness }))
     .filter(l => l.id);
   const groundIds = new Set([surfaceId, ...layers.map(l => l.id)]);
+  const veins = cfg.veins || [];
   const surface = new Int16Array(CHUNK_SIZE * CHUNK_SIZE);
 
   for (let lx = 0; lx < CHUNK_SIZE; lx++) {
@@ -70,6 +71,7 @@ export function generateTerrain(cx, cz, grid) {
   }
 
   generateTrees(grid, ox, oz, surface, groundIds);
+  generateVeins(grid, ox, oz, veins, fillId);
 }
 
 function rollTree(wx, wz) {
@@ -84,7 +86,7 @@ function rollTree(wx, wz) {
 function maxTreeRadius() {
   return Math.max(
     1,
-    ...treeDefs.map(d => ((d.leaves && d.leaves.radius) || 2) + Math.floor(((d.trunkWidth || 1) - 1) / 2))
+    ...treeDefs.map(d => ((d.canopy && d.canopy.radius) || 2) + Math.floor(((d.trunkWidth || 1) - 1) / 2))
   ) + 1;
 }
 
@@ -98,17 +100,55 @@ function placeLocal(grid, ox, oz, wx, y, wz, id) {
   grid[base + y] = id;
 }
 
+function setLocal(grid, ox, oz, wx, y, wz, id, targetId) {
+  if (y < 0 || y >= CHUNK_HEIGHT) return;
+  const lx = wx - ox;
+  const lz = wz - oz;
+  if (lx < 0 || lx >= CHUNK_SIZE || lz < 0 || lz >= CHUNK_SIZE) return;
+  const idx = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT + y;
+  if (grid[idx] !== targetId) return;
+  grid[idx] = id;
+}
+
+function generateVeins(grid, ox, oz, veins, fillId) {
+  for (const v of veins) {
+    for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+      for (let lz = 0; lz < CHUNK_SIZE; lz++) {
+        const wx = ox + lx;
+        const wz = oz + lz;
+        if (rand2D(wx * 1.3 + v.block * 0.7, wz * 1.9 + v.block * 3.1) >= v.chance) continue;
+        const size = v.size[0] + Math.floor(rand2D(wx * 0.5, wz * 0.9) * (v.size[1] - v.size[0] + 1));
+        let vx = wx;
+        let vy = v.minY + Math.floor(rand2D(wx * 2.3, wz * 2.7) * (v.maxY - v.minY + 1));
+        let vz = wz;
+        for (let s = 0; s < size; s++) {
+          setLocal(grid, ox, oz, vx, vy, vz, v.block, fillId);
+          const dir = Math.floor(rand2D(vx * 3.7 + s, vz * 5.9 + s) * 6);
+          if (dir === 0) vy++;
+          else if (dir === 1) vy--;
+          else if (dir === 2) vx++;
+          else if (dir === 3) vx--;
+          else if (dir === 4) vz++;
+          else vz--;
+          vy = Math.max(v.minY, Math.min(v.maxY, vy));
+        }
+      }
+    }
+  }
+}
+
 function placeTree(grid, ox, oz, wx, groundY, wz, def) {
-  const logId = def.log || 0;
-  const leafId = def.leaves || 0;
+  const blocks = def.blocks || {};
+  const logId = blocks.log || 0;
+  const leafId = blocks.leaves || 0;
   if (!logId || !leafId) return;
   const trunkMin = Math.min(def.trunkHeight[0], def.trunkHeight[1]);
   const trunkMax = Math.max(def.trunkHeight[0], def.trunkHeight[1]);
   const trunkHeight = trunkMin + Math.floor(rand2D(wx * 13, wz * 17) * (trunkMax - trunkMin + 1));
-  const lv = def.leaves || {};
-  const radius = lv.radius || 2;
-  const topRadius = lv.topRadius || 1;
-  const leafHeight = lv.height || 2;
+  const canopy = def.canopy || {};
+  const radius = canopy.radius || 2;
+  const topRadius = canopy.topRadius || 1;
+  const leafHeight = canopy.height || 2;
   const width = Math.max(1, def.trunkWidth || 1);
   const half = Math.floor(width / 2);
   const trunkTopY = groundY + trunkHeight;
