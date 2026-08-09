@@ -15,18 +15,22 @@ const SCROLL_SRC = `assets/textures/ui/inventory/scrollbars.png?v=${DATA_VERSION
 
 const SCALE = 2;
 const COLS = 9;
-const ROWS = 6;
+const ROWS = 5;
 const VISIBLE = COLS * ROWS;
 const SLOT_SIZE = 16;
 const SPACING = 18;
-const GRID_LEFT = 8;
+
+const WINDOW_WIDTH = 195;
+const WINDOW_HEIGHT = 136;
+
+const GRID_LEFT = 9;
 const GRID_TOP = 18;
 const TRACK_LEFT = 175;
-const TRACK_TOP = 13;
-const TRACK_HEIGHT = 116;
+const TRACK_TOP = 18;
+const TRACK_HEIGHT = 108;
 const THUMB_WIDTH = 12;
 const THUMB_HEIGHT = 15;
-const HOTBAR_TOP = 148;
+const HOTBAR_TOP = 112;
 
 let menuEl;
 let trackEl;
@@ -38,6 +42,7 @@ let rowOffset = 0;
 let maxRowOffset = 0;
 let open = false;
 let dragging = false;
+let slotDragging = false;
 let domElement;
 
 export function initInventory(canvasRef) {
@@ -57,6 +62,10 @@ export function initInventory(canvasRef) {
     }
   });
 
+  document.addEventListener('mouseup', () => {
+    slotDragging = false;
+  });
+
   document.addEventListener(
     'wheel',
     e => {
@@ -72,14 +81,17 @@ function buildMenu() {
   menuEl = document.createElement('div');
   menuEl.id = 'inventory';
   menuEl.style.display = 'none';
-  const windowW = 256 * SCALE;
-  const windowH = HOTBAR_TOP * SCALE + SLOT_SIZE * SCALE + 12;
+  
+  const windowW = WINDOW_WIDTH * SCALE;
+  const windowH = WINDOW_HEIGHT * SCALE;
   menuEl.style.width = `${windowW}px`;
   menuEl.style.height = `${windowH}px`;
 
   const bg = document.createElement('img');
   bg.className = 'inv-bg';
   bg.src = BG_SRC;
+  bg.style.width = '100%';
+  bg.style.height = '100%';
   menuEl.appendChild(bg);
 
   const grid = document.createElement('div');
@@ -95,10 +107,21 @@ function buildMenu() {
     el.style.top = `${row * SPACING * SCALE}px`;
     el.style.width = `${SLOT_SIZE * SCALE}px`;
     el.style.height = `${SLOT_SIZE * SCALE}px`;
+    
     const icon = document.createElement('img');
     icon.className = 'inv-item-icon';
     el.appendChild(icon);
-    el.addEventListener('click', () => onItemClick(i));
+
+    // Click and drag-to-place support like Minecraft creative inventory
+    el.addEventListener('mousedown', (e) => {
+      slotDragging = true;
+      onItemAction(i);
+      e.preventDefault();
+    });
+    el.addEventListener('mouseenter', () => {
+      if (slotDragging) onItemAction(i);
+    });
+
     grid.appendChild(el);
     gridSlots.push({ el, icon });
   }
@@ -110,9 +133,15 @@ function buildMenu() {
   trackEl.style.top = `${TRACK_TOP * SCALE}px`;
   trackEl.style.width = `${THUMB_WIDTH * SCALE}px`;
   trackEl.style.height = `${TRACK_HEIGHT * SCALE}px`;
+  trackEl.addEventListener('mousedown', onTrackClick);
+  
   thumbEl = document.createElement('div');
   thumbEl.className = 'inv-scroll-thumb';
+  thumbEl.style.width = `${THUMB_WIDTH * SCALE}px`;
+  thumbEl.style.height = `${THUMB_HEIGHT * SCALE}px`;
+  thumbEl.style.backgroundImage = `url(${SCROLL_SRC})`;
   thumbEl.addEventListener('mousedown', onThumbDown);
+  
   trackEl.appendChild(thumbEl);
   menuEl.appendChild(trackEl);
 
@@ -126,17 +155,18 @@ function buildMenu() {
     el.style.left = `${i * SPACING * SCALE}px`;
     el.style.width = `${SLOT_SIZE * SCALE}px`;
     el.style.height = `${SLOT_SIZE * SCALE}px`;
+    
     const bgImg = document.createElement('img');
     bgImg.className = 'inv-hotbar-bg';
     bgImg.src = 'assets/textures/ui/hotbarslot.png';
-    const selected = document.createElement('img');
-    selected.className = 'inv-hotbar-selected';
-    selected.src = 'assets/textures/ui/selected.png';
+    
     const icon = document.createElement('img');
     icon.className = 'inv-hotbar-icon';
+    
     el.appendChild(bgImg);
     el.appendChild(icon);
-    el.appendChild(selected);
+    
+    // Removed selected.png element entirely
     el.addEventListener('click', () => setSelectedSlot(i));
     hotbar.appendChild(el);
     hotbarSlotEls.push({ el, icon });
@@ -165,7 +195,7 @@ function displayName(def) {
     .join(' ');
 }
 
-function onItemClick(i) {
+function onItemAction(i) {
   const idx = rowOffset * COLS + i;
   const item = items[idx];
   if (!item) return;
@@ -182,10 +212,18 @@ function renderScroll() {
     s.icon.src = item ? item.icon : '';
     s.el.classList.toggle('empty', !item);
   });
+
+  const trackScaledHeight = TRACK_HEIGHT * SCALE;
+  const thumbScaledHeight = THUMB_HEIGHT * SCALE;
+  const maxTop = trackScaledHeight - thumbScaledHeight;
   const offs = maxRowOffset > 0 ? rowOffset / maxRowOffset : 0;
-  const maxTop = TRACK_HEIGHT - THUMB_HEIGHT;
-  thumbEl.style.top = `${Math.round(offs * maxTop) * SCALE}px`;
-  thumbEl.style.backgroundPosition = dragging ? '0px 0px' : `-${THUMB_WIDTH * SCALE}px 0px`;
+  
+  thumbEl.style.top = `${Math.round(offs * maxTop)}px`;
+  
+  // Use active/inactive texture states from the scrollbar sprite sheet
+  thumbEl.style.backgroundPosition = (dragging || maxRowOffset === 0) 
+    ? `-${THUMB_WIDTH * SCALE}px 0px` 
+    : `0px 0px`;
 }
 
 function renderHotbar() {
@@ -211,23 +249,35 @@ function setRowFromRatio(rel) {
   renderScroll();
 }
 
+function onTrackClick(e) {
+  if (e.target === thumbEl || maxRowOffset <= 0) return;
+  const rect = trackEl.getBoundingClientRect();
+  const thumbScaledHeight = THUMB_HEIGHT * SCALE;
+  const maxTop = rect.height - thumbScaledHeight;
+  const rel = (e.clientY - rect.top - thumbScaledHeight / 2) / maxTop;
+  setRowFromRatio(rel);
+}
+
 function onThumbDown(e) {
   if (maxRowOffset <= 0) return;
   dragging = true;
-  const rect = trackEl.getBoundingClientRect();
-  const maxTop = rect.height - THUMB_HEIGHT * SCALE;
-  const rel = (e.clientY - rect.top - (THUMB_HEIGHT * SCALE) / 2) / maxTop;
-  setRowFromRatio(rel);
+  updateThumbDrag(e);
   document.addEventListener('mousemove', onThumbMove);
   document.addEventListener('mouseup', onThumbUp);
+  e.stopPropagation();
   e.preventDefault();
 }
 
 function onThumbMove(e) {
   if (!dragging) return;
+  updateThumbDrag(e);
+}
+
+function updateThumbDrag(e) {
   const rect = trackEl.getBoundingClientRect();
-  const maxTop = rect.height - THUMB_HEIGHT * SCALE;
-  const rel = (e.clientY - rect.top - (THUMB_HEIGHT * SCALE) / 2) / maxTop;
+  const thumbScaledHeight = THUMB_HEIGHT * SCALE;
+  const maxTop = rect.height - thumbScaledHeight;
+  const rel = (e.clientY - rect.top - thumbScaledHeight / 2) / maxTop;
   setRowFromRatio(rel);
 }
 
@@ -249,6 +299,7 @@ function openMenu() {
 
 function close() {
   open = false;
+  slotDragging = false;
   menuEl.style.display = 'none';
   if (domElement) domElement.requestPointerLock();
 }

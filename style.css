@@ -231,7 +231,7 @@ canvas {
 #inventory .inv-bg {
   position: absolute;
   inset: 0;
-  width: 100%;
+  width: 75%;
   height: 100%;
   image-rendering: pixelated;
 }
@@ -261,7 +261,7 @@ canvas {
 }
 
 #inventory .inv-scrollbar {
-  background: rgba(0, 0, 0, 0.3);
+  background: transparent; /* Remove the dark grey box background */
   border-radius: 4px;
 }
 
@@ -269,10 +269,11 @@ canvas {
   position: absolute;
   left: 0;
   width: 100%;
-  height: 30px;
+  height: 100%;
   background-image: url('assets/textures/ui/inventory/scrollbars.png');
   background-repeat: no-repeat;
-  background-size: 24px 30px;
+  /* Scaled properly for a 24px wide sprite sheet (2 states x 12px width * scale 2) */
+  background-size: 48px 30px;
   cursor: pointer;
 }
 
@@ -299,9 +300,9 @@ canvas {
 }
 
 #inventory .inv-hotbar-icon {
-  display: none;
+  display: block;
 }
 
-#inventory .inv-hotbar-slot.filled .inv-hotbar-icon {
-  display: block;
+#inventory .inv-hotbar-slot.empty .inv-hotbar-icon {
+  display: none;
 }
