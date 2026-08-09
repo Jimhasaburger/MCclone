@@ -1,9 +1,9 @@
 {
   "default": "other",
   "categories": [
-    { "name": "nature", "blocks": [11, 7] },
+    { "name": "nature", "blocks": [11, 7, 1, 12] },
     { "name": "wood", "blocks": [6, 5] },
-    { "name": "underground", "blocks": [9, 2] },
-    { "name": "other", "blocks": [1, 4, 8, 10, 12] }
+    { "name": "underground", "blocks": [9, 2, 8] },
+    { "name": "other", "blocks": [4, 10] }
   ]
 }
