@@ -2,6 +2,7 @@
   "id": 3,
   "layer": -100,
   "unbreakable": true,
+  "locktosety": true,
   "sides": {
     "top": "assets/textures/blocks/bedrock.png",
     "bottom": "assets/textures/blocks/bedrock.png",
