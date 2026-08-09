@@ -9,7 +9,7 @@ import { initInventory } from './inventory.js';
 import { initSaveControls, clearSavedChunks, getSavedSeed, saveSeed } from './save.js';
 import { reloadWorld, saveAllLoadedChunks } from './world.js';
 import { setSeed, newSeed, getSeed } from './noise.js';
-import { loadSounds } from './sounds.js';
+import { loadSounds, initMusic } from './sounds.js';
 import { loadWorldgen } from './worldgen.js';
 
 const scene = new THREE.Scene();
@@ -53,7 +53,7 @@ initSaveControls(
     });
   }
 );
-Promise.all([loadTextures(), loadSounds(), loadWorldgen(), restoreSeed()]).then(() => {
+Promise.all([loadTextures(), loadSounds(), initMusic(), loadWorldgen(), restoreSeed()]).then(() => {
   refreshHotbar();
   updateChunks();
   waitForReady();

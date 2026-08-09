@@ -11,6 +11,7 @@ const keybinds = [
   ['R', 'Regenerate world (new seed)'],
   ['1-9 / Scroll', 'Select hotbar slot'],
   ['E', 'Open inventory'],
+  ['M', 'Toggle music'],
   ['Tab', 'Toggle menu'],
 ];
 
@@ -20,6 +21,7 @@ let canvas;
 let labelEl;
 let labelTimer = null;
 let coordsEl;
+let songEl;
 
 export function initUI(canvasRef) {
   canvas = canvasRef;
@@ -38,6 +40,9 @@ export function initUI(canvasRef) {
 
   coordsEl = document.getElementById('coords');
   if (coordsEl) coordsEl.style.fontFamily = "'GameFont', sans-serif";
+
+  songEl = document.getElementById('song');
+  if (songEl) songEl.style.fontFamily = "'GameFont', sans-serif";
 
   const crosshair = document.createElement('img');
   crosshair.id = 'crosshair';
@@ -119,6 +124,11 @@ export function setFPS(fps) {
 
 export function setCoords(x, y, z) {
   if (coordsEl) coordsEl.textContent = `X: ${Math.floor(x)}  Y: ${Math.floor(y)}  Z: ${Math.floor(z)}`;
+}
+
+export function setSong(text) {
+  if (!songEl) return;
+  songEl.textContent = text;
 }
 
 export function hideLoading() {

@@ -35,6 +35,17 @@ canvas {
   z-index: 10;
 }
 
+#song {
+  position: fixed;
+  bottom: 68px;
+  left: 8px;
+  color: #fff;
+  font-size: 18px;
+  text-shadow: 2px 2px 0 #000;
+  pointer-events: none;
+  z-index: 10;
+}
+
 #crosshair {
   position: fixed;
   top: 50%;

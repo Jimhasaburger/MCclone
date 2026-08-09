@@ -1,6 +1,8 @@
 import { DATA_VERSION } from './config.js';
+import { setSong } from './ui.js';
 
 const SOUNDS_FILE = 'assets/sounds/blocks/sounds.json';
+const AMBIENT_FILE = 'assets/sounds/ambient/songs.json';
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const soundSets = new Map();
@@ -54,4 +56,53 @@ export function playBlockDigSound(blockId) {
 
 export function playBlockPlaceSound(blockId) {
   playBlockDigSound(blockId);
+}
+
+const musicEl = new Audio();
+let songList = [];
+let musicOn = false;
+let musicTimer = null;
+
+export async function initMusic() {
+  try {
+    const res = await fetch(`${AMBIENT_FILE}?v=${DATA_VERSION}`);
+    const data = await res.json();
+    songList = data.songs || [];
+  } catch (e) {
+    console.error('Failed to load ambient music list', e);
+  }
+  musicEl.addEventListener('ended', onSongEnd);
+  document.addEventListener('keydown', e => {
+    if (e.code === 'KeyM') toggleMusic();
+  });
+  if (musicOn) playRandomSong();
+}
+
+export function toggleMusic() {
+  musicOn = !musicOn;
+  if (musicOn) {
+    playRandomSong();
+  } else {
+    clearTimeout(musicTimer);
+    setSong('');
+    musicEl.pause();
+    musicEl.currentTime = 0;
+  }
+  return musicOn;
+}
+
+function playRandomSong() {
+  if (!musicOn || songList.length === 0) return;
+  const song = songList[Math.floor(Math.random() * songList.length)];
+  musicEl.src = song.src;
+  musicEl.volume = 0.7;
+  setSong(`Now playing: ${song.name}`);
+  musicEl.play().catch(() => {});
+}
+
+function onSongEnd() {
+  if (!musicOn) return;
+  const gap = 20000 + Math.random() * 60000;
+  clearTimeout(musicTimer);
+  musicTimer = setTimeout(playRandomSong, gap);
 }
