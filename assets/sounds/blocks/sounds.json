@@ -23,11 +23,20 @@
         "assets/sounds/blocks/Stone/dig3.ogg",
         "assets/sounds/blocks/Stone/dig4.mp3"
       ]
+    },
+    "Wood": {
+      "dig": [
+        "assets/sounds/blocks/Wood/dig1.mp3",
+        "assets/sounds/blocks/Wood/dig2.mp3",
+        "assets/sounds/blocks/Wood/dig3.mp3",
+        "assets/sounds/blocks/Wood/dig4.ogg"
+      ]
     }
   },
   "blocks": {
     "1": "Grass",
     "2": "Stone",
-    "4": "Dirt"
+    "4": "Dirt",
+    "5": "Wood"
   }
 }
