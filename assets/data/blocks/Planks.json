@@ -1,0 +1,13 @@
+{
+  "id": 6,
+  "layer": "",
+  "unbreakable": false,
+  "sides": {
+    "top": "assets/textures/blocks/planks.png",
+    "bottom": "assets/textures/blocks/planks.png",
+    "north": "assets/textures/blocks/planks.png",
+    "south": "assets/textures/blocks/planks.png",
+    "east": "assets/textures/blocks/planks.png",
+    "west": "assets/textures/blocks/planks.png"
+  }
+}
