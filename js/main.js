@@ -4,7 +4,8 @@ import { initWorld, updateChunks, isWorldReady } from './world.js';
 import { initPlayer, updatePlayer, isPlayerSpawned, playerPos } from './player.js';
 import { initBlocks, updateOutline } from './blocks.js';
 import { initUI, setFPS, setCoords, hideLoading } from './ui.js';
-import { initHotbar, refreshHotbar, loadHotbarCategories } from './hotbar.js';
+import { initHotbar, refreshHotbar } from './hotbar.js';
+import { initInventory } from './inventory.js';
 import { initSaveControls, clearSavedChunks, getSavedSeed, saveSeed } from './save.js';
 import { reloadWorld, saveAllLoadedChunks } from './world.js';
 import { setSeed, newSeed, getSeed } from './noise.js';
@@ -32,6 +33,7 @@ scene.add(directionalLight);
 initWorld(scene, camera);
 initUI(renderer.domElement);
 initHotbar();
+initInventory(renderer.domElement);
 initPlayer(camera, renderer.domElement);
 initBlocks(scene, camera, renderer.domElement);
 initSaveControls(
@@ -51,7 +53,7 @@ initSaveControls(
     });
   }
 );
-Promise.all([loadTextures(), loadSounds(), loadWorldgen(), loadHotbarCategories(), restoreSeed()]).then(() => {
+Promise.all([loadTextures(), loadSounds(), loadWorldgen(), restoreSeed()]).then(() => {
   refreshHotbar();
   updateChunks();
   waitForReady();
