@@ -50,16 +50,18 @@ let frameCount = 0;
 let lastFpsTime = performance.now();
 
 let tick = 0;
+let lastTime = performance.now();
 
 function animate() {
   requestAnimationFrame(animate);
-  const dt = Math.min(0.05, 1 / 60);
+  const now = performance.now();
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
 
   updatePlayer(dt);
   updateOutline();
 
   frameCount++;
-  const now = performance.now();
   if (now - lastFpsTime >= 500) {
     setFPS(Math.round((frameCount * 1000) / (now - lastFpsTime)));
     frameCount = 0;
