@@ -1,6 +1,5 @@
 import * as THREE from 'three';
-import { CHUNK_SIZE, CHUNK_HEIGHT, RENDER_DISTANCE, PLAYER_HEIGHT, PLAYER_SIZE, LOCKED_FLOOR_Y } from './config.js';
-import { getHeight } from './noise.js';
+import { CHUNK_SIZE, CHUNK_HEIGHT, RENDER_DISTANCE, PLAYER_HEIGHT, PLAYER_SIZE } from './config.js';
 import { getBlockMaterials, getBlockDefs } from './textures.js';
 import { loadSavedChunk, saveChunkToStorage } from './save.js';
 
@@ -123,12 +122,12 @@ function blockIdAtLayer(layer) {
   return deepest ? deepest.id : 1;
 }
 
-function lockedBlockId(defs) {
+function lockedBlockDef(defs) {
   let best = null;
   for (const def of defs) {
     if (def.locktosety && (!best || Math.min(...def.layers) < Math.min(...best.layers))) best = def;
   }
-  return best ? best.id : 0;
+  return best;
 }
 
 function fillBlockId(defs) {
@@ -140,23 +139,26 @@ function fillBlockId(defs) {
   return best ? best.id : 0;
 }
 
+const TERRAIN_HEIGHT = 35;
+
 function generateTerrain(cx, cz) {
   const grid = getGrid(cx, cz);
   const ox = cx * CHUNK_SIZE;
   const oz = cz * CHUNK_SIZE;
   const defs = getBlockDefs();
-  const lockedId = lockedBlockId(defs);
+  const locked = lockedBlockDef(defs);
+  const lockedId = locked ? locked.id : 0;
+  const lockedFloorY = locked ? locked.layer : 0;
   const fillId = fillBlockId(defs);
   for (let lx = 0; lx < CHUNK_SIZE; lx++) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
-      const h = getHeight(ox + lx, oz + lz);
       const base = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT;
-      for (let y = 0; y < h; y++) {
+      for (let y = 0; y < TERRAIN_HEIGHT; y++) {
         let id;
-        if (lockedId && y < LOCKED_FLOOR_Y) {
+        if (lockedId && y < lockedFloorY) {
           id = lockedId;
         } else {
-          id = blockIdAtLayer(y - h + 2);
+          id = blockIdAtLayer(y - TERRAIN_HEIGHT + 2);
           if (lockedId && id === lockedId) id = fillId;
         }
         grid[base + y] = id;

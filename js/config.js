@@ -8,4 +8,3 @@ export const PLAYER_SIZE = 0.3;
 
 export const BLOCK_INDEX_FILE = 'assets/data/blocks/index.json';
 export const DEFAULT_BLOCK_ID = 1;
-export const LOCKED_FLOOR_Y = -10;

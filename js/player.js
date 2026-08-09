@@ -1,11 +1,12 @@
 import * as THREE from 'three';
-import { PLAYER_HEIGHT } from './config.js';
-import { collidesAt } from './world.js';
+import { PLAYER_HEIGHT, CHUNK_HEIGHT } from './config.js';
+import { collidesAt, isSolid } from './world.js';
 
 export const playerPos = new THREE.Vector3(0, 10, 0);
 
 const playerVel = new THREE.Vector3(0, 0, 0);
 let onGround = false;
+let spawned = false;
 const gravity = -20;
 const jumpSpeed = 7;
 
@@ -20,6 +21,20 @@ const forward = new THREE.Vector3();
 const right = new THREE.Vector3();
 
 let camera;
+
+function snapToSurface() {
+  if (spawned) return;
+  const bx = Math.floor(playerPos.x);
+  const bz = Math.floor(playerPos.z);
+  for (let y = CHUNK_HEIGHT - 1; y >= 0; y--) {
+    if (isSolid(bx, y, bz)) {
+      playerPos.y = y + 1;
+      playerVel.y = 0;
+      spawned = true;
+      return;
+    }
+  }
+}
 
 export function initPlayer(cameraRef, domElement) {
   camera = cameraRef;
@@ -58,6 +73,8 @@ export function initPlayer(cameraRef, domElement) {
 }
 
 export function updatePlayer(dt) {
+  snapToSurface();
+
   camera.getWorldDirection(forward);
   right.crossVectors(forward, camera.up).normalize();
   forward.y = 0;
