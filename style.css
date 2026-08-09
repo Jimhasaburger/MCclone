@@ -38,6 +38,42 @@ canvas {
   z-index: 10;
 }
 
+#hotbar {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.hotbar-slot {
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+
+.hotbar-slot img {
+  display: block;
+  image-rendering: pixelated;
+}
+
+.hotbar-selected {
+  position: absolute;
+  left: -1px;
+  top: -1px;
+  width: 22px;
+  height: 22px;
+  display: none;
+}
+
+.hotbar-slot.active .hotbar-selected {
+  display: block;
+}
+
 #loading {
   position: fixed;
   inset: 0;

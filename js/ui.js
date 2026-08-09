@@ -9,12 +9,16 @@ const keybinds = [
   ['G', 'Export world (zip)'],
   ['I', 'Import world (zip)'],
   ['R', 'Regenerate world (new seed)'],
+  ['1-9 / Scroll', 'Select hotbar slot'],
   ['Tab', 'Toggle menu'],
 ];
 
 let fpsEl;
 let menuEl;
 let canvas;
+let hotbarEl;
+let selectedSlot = 0;
+const slots = [];
 
 export function initUI(canvasRef) {
   canvas = canvasRef;
@@ -37,14 +41,54 @@ export function initUI(canvasRef) {
   crosshair.alt = '';
   document.body.appendChild(crosshair);
 
+  buildHotbar();
   buildMenu();
 
   document.addEventListener('keydown', e => {
     if (e.code === 'Tab') {
       e.preventDefault();
       toggleMenu();
+      return;
     }
+    const n = e.key;
+    if (n >= '1' && n <= '9') selectSlot(Number(n) - 1);
   });
+
+  document.addEventListener('wheel', e => {
+    e.preventDefault();
+    selectSlot(selectedSlot + (e.deltaY > 0 ? 1 : -1));
+  });
+}
+
+function buildHotbar() {
+  hotbarEl = document.createElement('div');
+  hotbarEl.id = 'hotbar';
+  for (let i = 0; i < 9; i++) {
+    const wrap = document.createElement('div');
+    wrap.className = 'hotbar-slot';
+    const slot = document.createElement('img');
+    slot.src = 'assets/textures/ui/hotbarslot.png';
+    slot.alt = '';
+    const selected = document.createElement('img');
+    selected.className = 'hotbar-selected';
+    selected.src = 'assets/textures/ui/selected.png';
+    selected.alt = '';
+    wrap.appendChild(slot);
+    wrap.appendChild(selected);
+    hotbarEl.appendChild(wrap);
+    slots.push(wrap);
+  }
+  document.body.appendChild(hotbarEl);
+  selectSlot(0);
+}
+
+function selectSlot(i) {
+  selectedSlot = ((i % 9) + 9) % 9;
+  slots.forEach((wrap, idx) => wrap.classList.toggle('active', idx === selectedSlot));
+}
+
+export function getSelectedSlot() {
+  return selectedSlot;
 }
 
 function buildMenu() {
