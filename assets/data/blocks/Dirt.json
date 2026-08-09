@@ -1,0 +1,13 @@
+{
+  "id": 4,
+  "layer": "-1_0",
+  "unbreakable": false,
+  "sides": {
+    "top": "assets/textures/blocks/dirt.png",
+    "bottom": "assets/textures/blocks/dirt.png",
+    "north": "assets/textures/blocks/dirt.png",
+    "south": "assets/textures/blocks/dirt.png",
+    "east": "assets/textures/blocks/dirt.png",
+    "west": "assets/textures/blocks/dirt.png"
+  }
+}
