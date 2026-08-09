@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { CHUNK_HEIGHT, PLAYER_HEIGHT, PLAYER_SIZE } from './config.js';
-import { getChunks, rebuildChunksAround, hasBlock, addBlock, removeBlock, updateChunks } from './world.js';
+import { getChunks, rebuildChunk, hasBlock, addBlock, removeBlock } from './world.js';
 import { playerPos } from './player.js';
 
 const raycaster = new THREE.Raycaster();
@@ -60,8 +60,7 @@ function breakBlock() {
   const target = getTarget();
   if (!target) return;
   removeBlock(target.bx, target.by, target.bz);
-  rebuildChunksAround(target.bx, target.bz);
-  updateChunks();
+  rebuildChunk(target.bx, target.bz);
 }
 
 function placeBlock() {
@@ -85,8 +84,7 @@ function placeBlock() {
   if (blockIntersectsPlayer(px, py, pz)) return;
 
   addBlock(px, py, pz);
-  rebuildChunksAround(px, pz);
-  updateChunks();
+  rebuildChunk(px, pz);
 }
 
 export function updateOutline() {

@@ -7,9 +7,11 @@ import { loadSavedChunk, saveChunkToStorage } from './save.js';
 const chunks = new Map();
 const loading = new Set();
 const loadedChunks = new Set();
-const blockMap = new Map();
+const chunkData = new Map();
 const dummy = new THREE.Object3D();
 const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+
+const GRID_SIZE = CHUNK_SIZE * CHUNK_HEIGHT * CHUNK_SIZE;
 
 let scene;
 let camera;
@@ -24,33 +26,49 @@ function chunkKey(cx, cz) {
   return `${cx},${cz}`;
 }
 
-function blockKey(x, y, z) {
-  return `${x},${y},${z}`;
+function chunkIndex(wx, y, wz) {
+  const lx = ((wx % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+  const lz = ((wz % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+  return (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT + y;
+}
+
+function getGrid(cx, cz) {
+  const key = chunkKey(cx, cz);
+  let grid = chunkData.get(key);
+  if (!grid) {
+    grid = new Uint8Array(GRID_SIZE);
+    chunkData.set(key, grid);
+  }
+  return grid;
 }
 
 export function hasBlock(x, y, z) {
-  return blockMap.has(blockKey(x, y, z));
+  if (y < 0 || y >= CHUNK_HEIGHT) return false;
+  const grid = chunkData.get(chunkKey(Math.floor(x / CHUNK_SIZE), Math.floor(z / CHUNK_SIZE)));
+  return grid ? grid[chunkIndex(x, y, z)] !== 0 : false;
 }
 
 export function addBlock(x, y, z, id = 1) {
-  blockMap.set(blockKey(x, y, z), id);
+  getGrid(Math.floor(x / CHUNK_SIZE), Math.floor(z / CHUNK_SIZE))[chunkIndex(x, y, z)] = id;
 }
 
 export function removeBlock(x, y, z) {
-  blockMap.delete(blockKey(x, y, z));
+  const grid = chunkData.get(chunkKey(Math.floor(x / CHUNK_SIZE), Math.floor(z / CHUNK_SIZE)));
+  if (grid) grid[chunkIndex(x, y, z)] = 0;
 }
 
 function saveChunk(cx, cz) {
+  const grid = chunkData.get(chunkKey(cx, cz));
+  if (!grid) return;
   const ox = cx * CHUNK_SIZE;
   const oz = cz * CHUNK_SIZE;
   const blocks = [];
   for (let lx = 0; lx < CHUNK_SIZE; lx++) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
-      const wx = ox + lx;
-      const wz = oz + lz;
+      const base = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT;
       for (let y = 0; y < CHUNK_HEIGHT; y++) {
-        const id = blockMap.get(blockKey(wx, y, wz));
-        if (id) blocks.push([wx, y, wz, id]);
+        const id = grid[base + y];
+        if (id) blocks.push([ox + lx, y, oz + lz, id]);
       }
     }
   }
@@ -68,7 +86,8 @@ async function loadChunk(cx, cz) {
   if (loadedChunks.has(key)) return;
   const saved = await loadSavedChunk(cx, cz);
   if (saved) {
-    for (const [x, y, z, id] of saved) blockMap.set(blockKey(x, y, z), id);
+    const grid = getGrid(cx, cz);
+    for (const [x, y, z, id] of saved) grid[chunkIndex(x, y, z)] = id;
   } else {
     generateTerrain(cx, cz);
     saveChunk(cx, cz);
@@ -77,21 +96,23 @@ async function loadChunk(cx, cz) {
 }
 
 function generateTerrain(cx, cz) {
+  const grid = getGrid(cx, cz);
   const ox = cx * CHUNK_SIZE;
   const oz = cz * CHUNK_SIZE;
   for (let lx = 0; lx < CHUNK_SIZE; lx++) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
-      const wx = ox + lx;
-      const wz = oz + lz;
-      const h = getHeight(wx, wz);
+      const h = getHeight(ox + lx, oz + lz);
+      const base = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT;
       for (let y = 0; y < h; y++) {
-        addBlock(wx, y, wz);
+        grid[base + y] = 1;
       }
     }
   }
 }
 
 function buildChunk(cx, cz) {
+  const grid = chunkData.get(chunkKey(cx, cz));
+  if (!grid) return null;
   const ox = cx * CHUNK_SIZE;
   const oz = cz * CHUNK_SIZE;
   const positions = [];
@@ -99,12 +120,11 @@ function buildChunk(cx, cz) {
 
   for (let lx = 0; lx < CHUNK_SIZE; lx++) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
-      const wx = ox + lx;
-      const wz = oz + lz;
+      const base = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT;
       for (let y = 0; y < CHUNK_HEIGHT; y++) {
-        if (!blockMap.has(blockKey(wx, y, wz))) continue;
+        if (grid[base + y] === 0) continue;
         positions.push(lx + 0.5, y + 0.5, lz + 0.5);
-        worldPositions.push(wx, y, wz);
+        worldPositions.push(ox + lx, y, oz + lz);
       }
     }
   }
@@ -161,18 +181,17 @@ export function updateChunks() {
   }
 }
 
-export function rebuildChunksAround(wx, wz) {
+export function rebuildChunk(wx, wz) {
   const cx = Math.floor(wx / CHUNK_SIZE);
   const cz = Math.floor(wz / CHUNK_SIZE);
-  for (let dx = -1; dx <= 1; dx++) {
-    for (let dz = -1; dz <= 1; dz++) {
-      const key = chunkKey(cx + dx, cz + dz);
-      saveChunkFromKey(key);
-      const mesh = chunks.get(key);
-      if (mesh) scene.remove(mesh);
-      chunks.delete(key);
-    }
-  }
+  const key = chunkKey(cx, cz);
+  const old = chunks.get(key);
+  if (old) scene.remove(old);
+  chunks.delete(key);
+  saveChunk(cx, cz);
+  const mesh = buildChunk(cx, cz);
+  if (mesh) scene.add(mesh);
+  chunks.set(key, mesh);
 }
 
 export function saveAllLoadedChunks() {
@@ -189,7 +208,7 @@ export function reloadWorld() {
   chunks.clear();
   loading.clear();
   loadedChunks.clear();
-  blockMap.clear();
+  chunkData.clear();
   updateChunks();
 }
 
@@ -199,7 +218,8 @@ export function getChunks() {
 
 export function isSolid(wx, wy, wz) {
   if (wy < 0 || wy >= CHUNK_HEIGHT) return false;
-  return blockMap.has(blockKey(Math.floor(wx), wy, Math.floor(wz)));
+  const grid = chunkData.get(chunkKey(Math.floor(wx / CHUNK_SIZE), Math.floor(wz / CHUNK_SIZE)));
+  return grid ? grid[chunkIndex(wx, wy, wz)] !== 0 : false;
 }
 
 export function collidesAt(wx, wy, wz) {
