@@ -7,6 +7,7 @@ import { initUI, setFPS, hideLoading, refreshHotbar } from './ui.js';
 import { initSaveControls, clearSavedChunks } from './save.js';
 import { reloadWorld, saveAllLoadedChunks } from './world.js';
 import { setSeed, newSeed } from './noise.js';
+import { loadSounds } from './sounds.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xc0d9e8);
@@ -37,7 +38,7 @@ initSaveControls(
     clearSavedChunks().then(() => reloadWorld());
   }
 );
-loadTextures().then(() => {
+Promise.all([loadTextures(), loadSounds()]).then(() => {
   hideLoading();
   refreshHotbar();
   updateChunks();

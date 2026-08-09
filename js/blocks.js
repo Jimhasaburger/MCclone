@@ -4,6 +4,7 @@ import { getChunks, rebuildChunk, hasBlock, addBlock, removeBlock, getBlockId } 
 import { isUnbreakable } from './textures.js';
 import { getSelectedBlockId } from './ui.js';
 import { playerPos } from './player.js';
+import { playBlockDigSound, playBlockPlaceSound } from './sounds.js';
 
 const raycaster = new THREE.Raycaster();
 
@@ -61,9 +62,11 @@ function blockIntersectsPlayer(px, py, pz) {
 function breakBlock() {
   const target = getTarget();
   if (!target) return;
-  if (isUnbreakable(getBlockId(target.bx, target.by, target.bz))) return;
+  const id = getBlockId(target.bx, target.by, target.bz);
+  if (!id || isUnbreakable(id)) return;
   removeBlock(target.bx, target.by, target.bz);
   rebuildChunk(target.bx, target.bz);
+  playBlockDigSound(id);
 }
 
 function placeBlock() {
@@ -90,6 +93,7 @@ function placeBlock() {
 
   addBlock(px, py, pz, blockId);
   rebuildChunk(px, pz);
+  playBlockPlaceSound(blockId);
 }
 
 export function updateOutline() {

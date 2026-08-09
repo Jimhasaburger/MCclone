@@ -1,0 +1,33 @@
+{
+  "soundsets": {
+    "Dirt": {
+      "dig": [
+        "assets/sounds/blocks/Dirt/dig1.mp3",
+        "assets/sounds/blocks/Dirt/dig2.ogg",
+        "assets/sounds/blocks/Dirt/dig3.ogg",
+        "assets/sounds/blocks/Dirt/dig4.ogg"
+      ]
+    },
+    "Grass": {
+      "dig": [
+        "assets/sounds/blocks/Grass/dig1.ogg",
+        "assets/sounds/blocks/Grass/dig2.ogg",
+        "assets/sounds/blocks/Grass/dig3.ogg",
+        "assets/sounds/blocks/Grass/dig4.ogg"
+      ]
+    },
+    "Stone": {
+      "dig": [
+        "assets/sounds/blocks/Stone/dig1.ogg",
+        "assets/sounds/blocks/Stone/dig2.ogg",
+        "assets/sounds/blocks/Stone/dig3.ogg",
+        "assets/sounds/blocks/Stone/dig4.mp3"
+      ]
+    }
+  },
+  "blocks": {
+    "1": "Grass",
+    "2": "Stone",
+    "3": "Dirt"
+  }
+}
