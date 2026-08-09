@@ -40,11 +40,11 @@ canvas {
 
 #hotbar {
   position: fixed;
-  bottom: 12px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 2px;
+  gap: 4px;
   image-rendering: pixelated;
   pointer-events: none;
   z-index: 10;
@@ -52,25 +52,27 @@ canvas {
 
 .hotbar-slot {
   position: relative;
-  width: 20px;
-  height: 20px;
+  width: 40px;
+  height: 40px;
 }
 
 .hotbar-slot img {
   display: block;
+  width: 40px;
+  height: 40px;
   image-rendering: pixelated;
 }
 
-.hotbar-selected {
-  position: absolute;
-  left: -1px;
-  top: -1px;
-  width: 22px;
-  height: 22px;
+.hotbar-slot img.hotbar-selected {
   display: none;
+  position: absolute;
+  left: -2px;
+  top: -2px;
+  width: 44px;
+  height: 44px;
 }
 
-.hotbar-slot.active .hotbar-selected {
+.hotbar-slot.active img.hotbar-selected {
   display: block;
 }
 
