@@ -1,8 +1,56 @@
 {
   "songs": [
     {
+      "name": "Calm1",
+      "src": "assets/sounds/ambient/calm1.ogg"
+    },
+    {
+      "name": "Calm2",
+      "src": "assets/sounds/ambient/calm2.ogg"
+    },
+    {
+      "name": "Calm3",
+      "src": "assets/sounds/ambient/calm3.ogg"
+    },
+    {
       "name": "Calm4",
       "src": "assets/sounds/ambient/Calm4.ogg"
+    },
+    {
+      "name": "Hal1",
+      "src": "assets/sounds/ambient/hal1.ogg"
+    },
+    {
+      "name": "Hal2",
+      "src": "assets/sounds/ambient/hal2.ogg"
+    },
+    {
+      "name": "Hal3",
+      "src": "assets/sounds/ambient/hal3.ogg"
+    },
+    {
+      "name": "Hal4",
+      "src": "assets/sounds/ambient/hal4.ogg"
+    },
+    {
+      "name": "Nuance1",
+      "src": "assets/sounds/ambient/nuance1.ogg"
+    },
+    {
+      "name": "Nuance2",
+      "src": "assets/sounds/ambient/nuance2.ogg"
+    },
+    {
+      "name": "Piano1",
+      "src": "assets/sounds/ambient/piano1.ogg"
+    },
+    {
+      "name": "Piano2",
+      "src": "assets/sounds/ambient/piano2.ogg"
+    },
+    {
+      "name": "Piano3",
+      "src": "assets/sounds/ambient/piano3.ogg"
     }
   ]
 }

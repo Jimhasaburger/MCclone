@@ -40,8 +40,7 @@ canvas {
   bottom: 68px;
   left: 8px;
   color: #fff;
-  font-size: 18px;
-  text-shadow: 2px 2px 0 #000;
+  font-size: 24px;
   pointer-events: none;
   z-index: 10;
 }
@@ -61,11 +60,11 @@ canvas {
 
 #hotbar {
   position: fixed;
-  bottom: 20px;
+  bottom: 4px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 4px;
+  gap: 0;
   image-rendering: pixelated;
   pointer-events: none;
   z-index: 10;
@@ -73,14 +72,14 @@ canvas {
 
 .hotbar-slot {
   position: relative;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
 }
 
 .hotbar-slot img {
   display: block;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   image-rendering: pixelated;
 }
 
@@ -89,8 +88,8 @@ canvas {
   position: absolute;
   left: -2px;
   top: -2px;
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
 }
 
 .hotbar-slot.active img.hotbar-selected {
@@ -100,10 +99,10 @@ canvas {
 .hotbar-slot img.hotbar-icon {
   display: none;
   position: absolute;
-  left: 4px;
-  top: 4px;
-  width: 32px;
-  height: 32px;
+  left: 6px;
+  top: 6px;
+  width: 36px;
+  height: 36px;
 }
 
 .hotbar-slot.filled img.hotbar-icon {
