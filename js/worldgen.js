@@ -1,12 +1,11 @@
 import { CHUNK_SIZE, CHUNK_HEIGHT } from './config.js';
-import { getHeight, rand2D, setNoiseConfig } from './noise.js';
+import { getHeight, rand2D, noise2D, setHeightConfig } from './noise.js';
 import { getBlockDefs } from './textures.js';
 
 let treeDefs = [];
 let cfg = null;
 let idsByName = new Map();
 let replaceIds = new Set();
-let waterBlock = null;
 let idsResolved = false;
 
 export async function loadWorldgen() {
@@ -16,7 +15,7 @@ export async function loadWorldgen() {
     fetch('assets/data/structures/trees/big.json').then(r => r.json()),
   ]);
   cfg = main;
-  if (cfg.noise) setNoiseConfig(cfg.noise);
+  if (cfg.height) setHeightConfig(cfg.height);
   treeDefs = [small, big]
     .filter(t => t && t.chance > 0)
     .sort((a, b) => b.chance - a.chance);
@@ -32,15 +31,42 @@ function ensureIds() {
     const id = idsByName.get(name);
     if (id) replaceIds.add(id);
   }
-  waterBlock = defs.find(d => typeof d.waterLevel === 'number') || null;
   idsResolved = true;
 }
 
-function blockIdAtLayer(layers, layer) {
-  for (const l of layers) {
-    if (layer <= l.top && layer >= l.bottom) return l.id;
+function randInt(min, max, wx, wz) {
+  return min + Math.floor(rand2D(wx * 17 + 3, wz * 29 + 5) * (max - min + 1));
+}
+
+function resolveBlock(spec, wx, wz) {
+  if (typeof spec === 'string') return idsByName.get(spec) || 0;
+  const entries = Object.entries(spec);
+  const r = rand2D(wx * 101 + 7, wz * 131 + 11);
+  let cum = 0;
+  for (const [name, w] of entries) {
+    cum += w;
+    if (r < cum) return idsByName.get(name) || 0;
   }
-  return layers.length ? layers[layers.length - 1].id : 1;
+  return idsByName.get(entries[0][0]) || 0;
+}
+
+function isSteep(wx, wz, h) {
+  return (
+    Math.abs(getHeight(wx + 1, wz) - h) > 3 ||
+    Math.abs(getHeight(wx - 1, wz) - h) > 3 ||
+    Math.abs(getHeight(wx, wz + 1) - h) > 3 ||
+    Math.abs(getHeight(wx, wz - 1) - h) > 3
+  );
+}
+
+function pickRegion(h, seaLevel, wx, wz) {
+  if (h < seaLevel) return 'ocean';
+  if (h < seaLevel + 3) return 'beach';
+  if (cfg.desertNoise) {
+    const d = cfg.desertNoise;
+    if (noise2D(wx + d.offsetX, wz + d.offsetZ, d.scale) > (d.threshold || 0.62)) return 'desert';
+  }
+  return 'land';
 }
 
 export function generateTerrain(cx, cz, grid) {
@@ -49,39 +75,58 @@ export function generateTerrain(cx, cz, grid) {
   const ox = cx * CHUNK_SIZE;
   const oz = cz * CHUNK_SIZE;
 
-  const bedrockId = cfg.bedrock ? idsByName.get(cfg.bedrock) || 0 : 0;
-  const landId = cfg.surface ? idsByName.get(cfg.surface) || 0 : 0;
-  const waterId = waterBlock ? waterBlock.id : 0;
-  const waterLevel = waterBlock ? waterBlock.waterLevel : 0;
-  const layers = (cfg.layers || [])
-    .map(l => ({ id: idsByName.get(l.block) || 0, top: l.top, bottom: l.bottom }))
-    .filter(l => l.id)
-    .sort((a, b) => b.top - a.top);
+  const seaLevel = cfg.height ? cfg.height.seaLevel : 63;
+  const bedrock = cfg.bedrock || {};
+  const bedrockId = idsByName.get(bedrock.block) || 0;
+  const flatTop = bedrock.flatTop || 1;
+  const patchyTop = bedrock.patchyTop || flatTop;
+  const patchDensity = bedrock.patchDensity || 0.5;
+  const regions = cfg.regions || {};
+  const waterId = idsByName.get('water') || 0;
+  const stoneId = idsByName.get('stone') || 0;
   const surface = new Int16Array(CHUNK_SIZE * CHUNK_SIZE);
 
   for (let lx = 0; lx < CHUNK_SIZE; lx++) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
-      const h = getHeight(ox + lx, oz + lz);
+      const wx = ox + lx;
+      const wz = oz + lz;
+      const h = getHeight(wx, wz);
       const base = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT;
-      const submerged = waterId && waterLevel > 0 && h - 1 < waterLevel;
-      const surfaceId = submerged ? waterId : landId;
 
-      for (let y = 0; y < h; y++) {
-        let id;
-        if (bedrockId && y === 0) {
-          id = bedrockId;
-        } else if (y === h - 1) {
-          id = surfaceId;
-        } else {
-          id = blockIdAtLayer(layers, y - h + 2);
+      for (let y = 0; y < flatTop; y++) grid[base + y] = bedrockId;
+      for (let y = flatTop; y < patchyTop; y++) {
+        if (rand2D(wx * 31 + y * 7, wz * 37 + y * 13) < patchDensity) grid[base + y] = bedrockId;
+      }
+
+      const regionName = pickRegion(h, seaLevel, wx, wz);
+      const region = regions[regionName] || regions.land || {};
+      let surfaceId = resolveBlock(region.surface || 'grass', wx, wz);
+      const layers = region.layers || [];
+      const bare = regionName === 'land' && stoneId && isSteep(wx, wz, h);
+
+      let y = h;
+      grid[base + y] = bare ? stoneId : surfaceId;
+      y--;
+      if (!bare) {
+        for (const layer of layers) {
+          const blockId = resolveBlock(layer.block, wx, wz);
+          const t = randInt(layer.thickness[0], layer.thickness[1], wx, wz);
+          for (let i = 0; i < t && y >= patchyTop; i++) {
+            grid[base + y] = blockId;
+            y--;
+          }
         }
-        grid[base + y] = id;
+      }
+      const fillId = idsByName.get(region.fill) || stoneId;
+      while (y >= patchyTop) {
+        grid[base + y] = fillId;
+        y--;
       }
 
-      if (submerged) {
-        for (let y = h; y < waterLevel; y++) grid[base + y] = waterId;
+      if (regionName === 'ocean' && waterId) {
+        for (let wy = h + 1; wy <= seaLevel; wy++) grid[base + wy] = waterId;
       }
-      surface[lx * CHUNK_SIZE + lz] = h - 1;
+      surface[lx * CHUNK_SIZE + lz] = h;
     }
   }
 
@@ -106,7 +151,7 @@ function generateOres(grid, ox, oz) {
         const vx = cx * spacing + Math.floor(rand2D(cx * 7 + 1, cz * 11 + 1) * spacing);
         const vz = cz * spacing + Math.floor(rand2D(cx * 13 + 1, cz * 17 + 1) * spacing);
         const h = getHeight(vx, vz);
-        const minY = h + ore.minLayer;
+        const minY = Math.max(h + ore.minLayer, 6);
         const maxY = h + ore.maxLayer;
         if (minY >= maxY) continue;
         const vy = minY + Math.floor(rand2D(cx * 19 + 1, cz * 23 + 1) * (maxY - minY + 1));
@@ -222,7 +267,7 @@ function generateTrees(grid, ox, oz, surface) {
       const wz = oz + dz;
       const def = rollTree(wx, wz);
       if (!def) continue;
-      const groundY = getHeight(wx, wz) - 1;
+      const groundY = getHeight(wx, wz);
       placeTree(grid, ox, oz, wx, groundY, wz, def);
     }
   }

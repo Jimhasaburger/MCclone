@@ -36,6 +36,20 @@ async function loadBlockDef(name, retries = 3) {
       const data = await res.json();
       blockDefs.set(data.id, data);
 
+      if (data.color) {
+        const mats = FACE_ORDER.map(() => {
+          const mat = new THREE.MeshStandardMaterial({ color: data.color });
+          if (data.transparent) {
+            mat.transparent = true;
+            mat.opacity = data.opacity ?? 0.8;
+            mat.depthWrite = false;
+          }
+          return mat;
+        });
+        blockMaterials.set(data.id, mats);
+        return;
+      }
+
       const sides = data.sides || {};
       const mats = await Promise.all(
         FACE_ORDER.map(face => loadFaceMaterial(sides[face]))
@@ -62,6 +76,19 @@ export function isTexturesReady() {
 
 export function isUnbreakable(id) {
   return Boolean(blockDefs.get(id)?.unbreakable);
+}
+
+export function isSolidBlock(id) {
+  if (!id) return false;
+  const def = blockDefs.get(id);
+  return def ? def.solid !== false : true;
+}
+
+export function getWaterId() {
+  for (const d of blockDefs.values()) {
+    if (d.solid === false) return d.id;
+  }
+  return 0;
 }
 
 export function getBlockIconPath(id) {

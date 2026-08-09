@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { CHUNK_SIZE, CHUNK_HEIGHT, RENDER_DISTANCE, PLAYER_HEIGHT, PLAYER_SIZE } from './config.js';
-import { getBlockMaterials, isTexturesReady } from './textures.js';
+import { getBlockMaterials, isTexturesReady, isSolidBlock, getWaterId } from './textures.js';
 import { isSeedReady } from './noise.js';
 import { generateTerrain } from './worldgen.js';
 import { loadSavedChunk, saveChunkToStorage } from './save.js';
@@ -56,7 +56,14 @@ function getGrid(cx, cz) {
 export function hasBlock(x, y, z) {
   if (y < 0 || y >= CHUNK_HEIGHT) return false;
   const grid = chunkData.get(chunkKey(Math.floor(x / CHUNK_SIZE), Math.floor(z / CHUNK_SIZE)));
-  return grid ? grid[chunkIndex(x, y, z)] !== 0 : false;
+  return grid ? isSolidBlock(grid[chunkIndex(x, y, z)]) : false;
+}
+
+export function isWater(wx, wy, wz) {
+  const id = getWaterId();
+  if (!id || wy < 0 || wy >= CHUNK_HEIGHT) return false;
+  const grid = chunkData.get(chunkKey(Math.floor(wx / CHUNK_SIZE), Math.floor(wz / CHUNK_SIZE)));
+  return grid ? grid[chunkIndex(wx, wy, wz)] === id : false;
 }
 
 export function addBlock(x, y, z, id = 1) {
@@ -112,18 +119,28 @@ async function loadChunk(cx, cz) {
   loadedChunks.add(key);
 }
 
-function blockIsExposed(grid, lx, y, lz) {
+function blockIsExposed(grid, lx, y, lz, waterId) {
   if (y <= 0 || y >= CHUNK_HEIGHT - 1) return true;
   if (lx <= 0 || lx >= CHUNK_SIZE - 1 || lz <= 0 || lz >= CHUNK_SIZE - 1) return true;
   const base = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT;
-  return (
-    grid[base + y + 1] === 0 ||
-    grid[base + y - 1] === 0 ||
-    grid[base + y + CHUNK_HEIGHT] === 0 ||
-    grid[base + y - CHUNK_HEIGHT] === 0 ||
-    grid[base + y + CHUNK_HEIGHT * CHUNK_SIZE] === 0 ||
-    grid[base + y - CHUNK_HEIGHT * CHUNK_SIZE] === 0
-  );
+  const self = grid[base + y];
+  const neighbors = [
+    grid[base + y + 1],
+    grid[base + y - 1],
+    grid[base + y + CHUNK_HEIGHT],
+    grid[base + y - CHUNK_HEIGHT],
+    grid[base + y + CHUNK_HEIGHT * CHUNK_SIZE],
+    grid[base + y - CHUNK_HEIGHT * CHUNK_SIZE],
+  ];
+  for (const n of neighbors) {
+    if (n === 0) return true;
+    if (self === waterId) {
+      if (n !== waterId) return true;
+    } else if (n === waterId) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function buildChunk(cx, cz) {
@@ -131,6 +148,7 @@ function buildChunk(cx, cz) {
   if (!grid) return null;
   const ox = cx * CHUNK_SIZE;
   const oz = cz * CHUNK_SIZE;
+  const waterId = getWaterId();
   const groups = new Map();
 
   for (let lx = 0; lx < CHUNK_SIZE; lx++) {
@@ -138,7 +156,7 @@ function buildChunk(cx, cz) {
       const base = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT;
       for (let y = 0; y < CHUNK_HEIGHT; y++) {
         const id = grid[base + y];
-        if (!id || !blockIsExposed(grid, lx, y, lz)) continue;
+        if (!id || !blockIsExposed(grid, lx, y, lz, waterId)) continue;
         let g = groups.get(id);
         if (!g) {
           g = { positions: [], worldPositions: [] };
@@ -162,6 +180,7 @@ function buildChunk(cx, cz) {
     }
     mesh.instanceMatrix.needsUpdate = true;
     mesh.position.set(ox, 0, oz);
+    if (id === waterId) mesh.renderOrder = 1;
     mesh.userData.blockPositions = g.worldPositions;
     meshes.push(mesh);
   }
@@ -253,7 +272,7 @@ export function getChunks() {
 export function isSolid(wx, wy, wz) {
   if (wy < 0 || wy >= CHUNK_HEIGHT) return false;
   const grid = chunkData.get(chunkKey(Math.floor(wx / CHUNK_SIZE), Math.floor(wz / CHUNK_SIZE)));
-  return grid ? grid[chunkIndex(wx, wy, wz)] !== 0 : false;
+  return grid ? isSolidBlock(grid[chunkIndex(wx, wy, wz)]) : false;
 }
 
 export function collidesAt(wx, wy, wz) {

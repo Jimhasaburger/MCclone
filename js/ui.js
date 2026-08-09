@@ -90,7 +90,7 @@ function buildHotbar() {
 }
 
 export function refreshHotbar() {
-  const defs = getBlockDefs().filter(d => !d.unbreakable);
+  const defs = getBlockDefs().filter(d => !d.unbreakable && d.solid !== false);
   slots.forEach((wrap, i) => {
     const icon = wrap.querySelector('.hotbar-icon');
     const def = defs[i];

@@ -1,5 +1,5 @@
 export const CHUNK_SIZE = 16;
-export const CHUNK_HEIGHT = 64;
+export const CHUNK_HEIGHT = 128;
 export const RENDER_DISTANCE = 4;
 export const FACE_ORDER = ['east', 'west', 'top', 'bottom', 'north', 'south'];
 

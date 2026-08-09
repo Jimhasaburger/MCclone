@@ -1,7 +1,6 @@
 {
   "id": 10,
   "name": "sand",
-  "waterLevel": 6,
   "unbreakable": false,
   "sides": {
     "top": "assets/textures/blocks/sand.png",

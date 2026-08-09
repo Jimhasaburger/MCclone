@@ -12,7 +12,7 @@ import { loadWorldgen } from './worldgen.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xc0d9e8);
-scene.fog = new THREE.Fog(0xc0d9e8, 24, 40);
+scene.fog = new THREE.Fog(0xc0d9e8, 50, 110);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 

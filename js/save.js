@@ -50,10 +50,13 @@ let db;
 function openDB() {
   return new Promise((resolve, reject) => {
     if (db) return resolve(db);
-    const req = indexedDB.open(DB_NAME, 2);
+    const req = indexedDB.open(DB_NAME, 3);
     req.onupgradeneeded = () => {
-      if (!req.result.objectStoreNames.contains(STORE)) req.result.createObjectStore(STORE);
-      if (!req.result.objectStoreNames.contains(META_STORE)) req.result.createObjectStore(META_STORE);
+      const db = req.result;
+      if (db.objectStoreNames.contains(STORE)) db.deleteObjectStore(STORE);
+      if (db.objectStoreNames.contains(META_STORE)) db.deleteObjectStore(META_STORE);
+      db.createObjectStore(STORE);
+      db.createObjectStore(META_STORE);
     };
     req.onsuccess = () => {
       db = req.result;

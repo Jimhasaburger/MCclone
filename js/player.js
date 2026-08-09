@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { PLAYER_HEIGHT, CHUNK_HEIGHT } from './config.js';
-import { collidesAt, isSolid } from './world.js';
+import { collidesAt, isSolid, isWater } from './world.js';
 
 export const playerPos = new THREE.Vector3(0, 10, 0);
 
@@ -95,7 +95,10 @@ export function updatePlayer(dt) {
   const factor = 1 - Math.exp(-accel * dt);
   playerVel.x += (move.x - playerVel.x) * factor;
   playerVel.z += (move.z - playerVel.z) * factor;
-  playerVel.y += gravity * dt;
+
+  const inWater = isWater(Math.floor(playerPos.x), Math.floor(playerPos.y), Math.floor(playerPos.z));
+  playerVel.y += (inWater ? gravity * 0.15 : gravity) * dt;
+  if (inWater) playerVel.y = Math.max(playerVel.y, -4);
 
   onGround = false;
 
