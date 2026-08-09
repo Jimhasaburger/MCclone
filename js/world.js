@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { CHUNK_SIZE, CHUNK_HEIGHT, RENDER_DISTANCE, PLAYER_HEIGHT, PLAYER_SIZE } from './config.js';
 import { getHeight } from './noise.js';
-import { materials } from './textures.js';
+import { getBlockMaterials, getBlockDefs } from './textures.js';
 import { loadSavedChunk, saveChunkToStorage } from './save.js';
 
 const chunks = new Map();
@@ -95,6 +95,18 @@ async function loadChunk(cx, cz) {
   loadedChunks.add(key);
 }
 
+function blockIdAtLayer(layer) {
+  const defs = getBlockDefs();
+  for (const def of defs) {
+    if (def.layers.includes(layer)) return def.id;
+  }
+  let deepest = null;
+  for (const def of defs) {
+    if (!deepest || Math.min(...def.layers) < Math.min(...deepest.layers)) deepest = def;
+  }
+  return deepest ? deepest.id : 1;
+}
+
 function generateTerrain(cx, cz) {
   const grid = getGrid(cx, cz);
   const ox = cx * CHUNK_SIZE;
@@ -104,7 +116,7 @@ function generateTerrain(cx, cz) {
       const h = getHeight(ox + lx, oz + lz);
       const base = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT;
       for (let y = 0; y < h; y++) {
-        grid[base + y] = 1;
+        grid[base + y] = blockIdAtLayer(y - h + 2);
       }
     }
   }
@@ -115,37 +127,45 @@ function buildChunk(cx, cz) {
   if (!grid) return null;
   const ox = cx * CHUNK_SIZE;
   const oz = cz * CHUNK_SIZE;
-  const positions = [];
-  const worldPositions = [];
+  const groups = new Map();
 
   for (let lx = 0; lx < CHUNK_SIZE; lx++) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
       const base = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT;
       for (let y = 0; y < CHUNK_HEIGHT; y++) {
-        if (grid[base + y] === 0) continue;
-        positions.push(lx + 0.5, y + 0.5, lz + 0.5);
-        worldPositions.push(ox + lx, y, oz + lz);
+        const id = grid[base + y];
+        if (!id) continue;
+        let g = groups.get(id);
+        if (!g) {
+          g = { positions: [], worldPositions: [] };
+          groups.set(id, g);
+        }
+        g.positions.push(lx + 0.5, y + 0.5, lz + 0.5);
+        g.worldPositions.push(ox + lx, y, oz + lz);
       }
     }
   }
 
-  if (positions.length === 0) return null;
+  if (groups.size === 0) return null;
 
-  const mesh = new THREE.InstancedMesh(boxGeo, materials, positions.length / 3);
-  const matrix = new THREE.Matrix4();
-  for (let i = 0; i < positions.length; i += 3) {
-    dummy.position.set(positions[i], positions[i + 1], positions[i + 2]);
-    dummy.updateMatrix();
-    matrix.copy(dummy.matrix);
-    mesh.setMatrixAt(i / 3, matrix);
+  const meshes = [];
+  for (const [id, g] of groups) {
+    const mesh = new THREE.InstancedMesh(boxGeo, getBlockMaterials(id), g.positions.length / 3);
+    for (let i = 0; i < g.positions.length; i += 3) {
+      dummy.position.set(g.positions[i], g.positions[i + 1], g.positions[i + 2]);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i / 3, dummy.matrix);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.position.set(ox, 0, oz);
+    mesh.userData.blockPositions = g.worldPositions;
+    meshes.push(mesh);
   }
-  mesh.instanceMatrix.needsUpdate = true;
-  mesh.position.set(ox, 0, oz);
-  mesh.userData.blockPositions = worldPositions;
-  return mesh;
+  return meshes;
 }
 
 export function updateChunks() {
+  if (getBlockDefs().length === 0) return;
   const cx = Math.floor(camera.position.x / CHUNK_SIZE);
   const cz = Math.floor(camera.position.z / CHUNK_SIZE);
   const needed = new Set();
@@ -165,16 +185,16 @@ export function updateChunks() {
         .then(() => {
           loading.delete(key);
           if (ver !== worldVersion || chunks.has(key) || !needed.has(key)) return;
-          const mesh = buildChunk(cx + dx, cz + dz);
-          if (mesh) scene.add(mesh);
-          chunks.set(key, mesh);
+          const meshes = buildChunk(cx + dx, cz + dz);
+          if (meshes) meshes.forEach(m => scene.add(m));
+          chunks.set(key, meshes);
         });
     }
   }
 
-  for (const [key, mesh] of chunks) {
+  for (const [key, meshes] of chunks) {
     if (!needed.has(key)) {
-      if (mesh) scene.remove(mesh);
+      if (meshes) meshes.forEach(m => scene.remove(m));
       saveChunkFromKey(key);
       chunks.delete(key);
     }
@@ -186,12 +206,12 @@ export function rebuildChunk(wx, wz) {
   const cz = Math.floor(wz / CHUNK_SIZE);
   const key = chunkKey(cx, cz);
   const old = chunks.get(key);
-  if (old) scene.remove(old);
+  if (old) old.forEach(m => scene.remove(m));
   chunks.delete(key);
   saveChunk(cx, cz);
-  const mesh = buildChunk(cx, cz);
-  if (mesh) scene.add(mesh);
-  chunks.set(key, mesh);
+  const meshes = buildChunk(cx, cz);
+  if (meshes) meshes.forEach(m => scene.add(m));
+  chunks.set(key, meshes);
 }
 
 export function saveAllLoadedChunks() {
@@ -202,8 +222,8 @@ export function saveAllLoadedChunks() {
 
 export function reloadWorld() {
   worldVersion++;
-  for (const [key, mesh] of chunks) {
-    if (mesh) scene.remove(mesh);
+  for (const [key, meshes] of chunks) {
+    if (meshes) meshes.forEach(m => scene.remove(m));
   }
   chunks.clear();
   loading.clear();

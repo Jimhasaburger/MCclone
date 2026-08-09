@@ -30,8 +30,10 @@ initUI();
 initPlayer(camera, renderer.domElement);
 initBlocks(scene, camera, renderer.domElement);
 initSaveControls(() => reloadWorld());
-updateChunks();
-loadTextures().then(hideLoading);
+loadTextures().then(() => {
+  hideLoading();
+  updateChunks();
+});
 
 window.addEventListener('beforeunload', saveAllLoadedChunks);
 

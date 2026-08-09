@@ -6,4 +6,5 @@ export const FACE_ORDER = ['east', 'west', 'top', 'bottom', 'north', 'south'];
 export const PLAYER_HEIGHT = 2;
 export const PLAYER_SIZE = 0.5;
 
-export const BLOCK_TEXTURE_FILE = 'assets/data/blocks/Grass.json';
+export const BLOCK_INDEX_FILE = 'assets/data/blocks/index.json';
+export const DEFAULT_BLOCK_ID = 1;

@@ -1,0 +1,12 @@
+{
+  "id": 2,
+  "layer": -2,
+  "sides": {
+    "top": "assets/textures/blocks/stone.png",
+    "bottom": "assets/textures/blocks/stone.png",
+    "north": "assets/textures/blocks/stone.png",
+    "south": "assets/textures/blocks/stone.png",
+    "east": "assets/textures/blocks/stone.png",
+    "west": "assets/textures/blocks/stone.png"
+  }
+}

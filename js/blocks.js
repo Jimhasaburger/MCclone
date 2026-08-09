@@ -30,7 +30,7 @@ export function initBlocks(scene, cameraRef, domElement) {
 
 function getTarget() {
   raycaster.setFromCamera({ x: 0, y: 0 }, camera);
-  const intersects = raycaster.intersectObjects([...getChunks().values()].filter(m => m));
+  const intersects = raycaster.intersectObjects([...getChunks().values()].flat().filter(m => m));
   if (intersects.length === 0) return null;
   const hit = intersects[0];
   const mesh = hit.object;
