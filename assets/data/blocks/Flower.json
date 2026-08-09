@@ -1,0 +1,15 @@
+{
+  "id": 12,
+  "name": "flower",
+  "type": "plant",
+  "solid": false,
+  "unbreakable": false,
+  "sides": {
+    "top": "assets/textures/blocks/flower.png",
+    "bottom": "assets/textures/blocks/flower.png",
+    "north": "assets/textures/blocks/flower.png",
+    "south": "assets/textures/blocks/flower.png",
+    "east": "assets/textures/blocks/flower.png",
+    "west": "assets/textures/blocks/flower.png"
+  }
+}

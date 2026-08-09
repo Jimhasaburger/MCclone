@@ -1,0 +1,15 @@
+{
+  "id": 11,
+  "name": "grass",
+  "type": "plant",
+  "solid": false,
+  "unbreakable": false,
+  "sides": {
+    "top": "assets/textures/blocks/grass_plant.png",
+    "bottom": "assets/textures/blocks/grass_plant.png",
+    "north": "assets/textures/blocks/grass_plant.png",
+    "south": "assets/textures/blocks/grass_plant.png",
+    "east": "assets/textures/blocks/grass_plant.png",
+    "west": "assets/textures/blocks/grass_plant.png"
+  }
+}

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { CHUNK_SIZE, CHUNK_HEIGHT, RENDER_DISTANCE, PLAYER_HEIGHT, PLAYER_SIZE } from './config.js';
-import { getBlockMaterials, isTexturesReady, isSolidBlock, getWaterId } from './textures.js';
+import { getBlockMaterials, isTexturesReady, isSolidBlock, isPlantBlock, getWaterId } from './textures.js';
 import { isSeedReady } from './noise.js';
 import { generateTerrain } from './worldgen.js';
 import { loadSavedChunk, saveChunkToStorage } from './save.js';
@@ -13,6 +13,22 @@ const dummy = new THREE.Object3D();
 const boxGeo = new THREE.BoxGeometry(1, 1, 1);
 
 const GRID_SIZE = CHUNK_SIZE * CHUNK_HEIGHT * CHUNK_SIZE;
+
+let crossGeo;
+
+function getCrossGeometry() {
+  if (crossGeo) return crossGeo;
+  const positions = [];
+  const pushQuad = (a, b, c, d) => {
+    positions.push(...a, ...b, ...c, ...c, ...d, ...a);
+  };
+  pushQuad([0.8, 0, 0.8], [0.8, 1, 0.8], [-0.8, 1, -0.8], [-0.8, 0, -0.8]);
+  pushQuad([0.8, 0, -0.8], [0.8, 1, -0.8], [-0.8, 1, 0.8], [-0.8, 0, 0.8]);
+  crossGeo = new THREE.BufferGeometry();
+  crossGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  crossGeo.computeVertexNormals();
+  return crossGeo;
+}
 
 let scene;
 let camera;
@@ -124,6 +140,7 @@ function blockIsExposed(grid, lx, y, lz, waterId) {
   if (lx <= 0 || lx >= CHUNK_SIZE - 1 || lz <= 0 || lz >= CHUNK_SIZE - 1) return true;
   const base = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT;
   const self = grid[base + y];
+  if (!isSolidBlock(self)) return true;
   const neighbors = [
     grid[base + y + 1],
     grid[base + y - 1],
@@ -138,6 +155,8 @@ function blockIsExposed(grid, lx, y, lz, waterId) {
       if (n !== waterId) return true;
     } else if (n === waterId) {
       return true;
+    } else if (!isSolidBlock(n)) {
+      return true;
     }
   }
   return false;
@@ -150,6 +169,7 @@ function buildChunk(cx, cz) {
   const oz = cz * CHUNK_SIZE;
   const waterId = getWaterId();
   const groups = new Map();
+  const plantGroups = new Map();
 
   for (let lx = 0; lx < CHUNK_SIZE; lx++) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
@@ -157,10 +177,11 @@ function buildChunk(cx, cz) {
       for (let y = 0; y < CHUNK_HEIGHT; y++) {
         const id = grid[base + y];
         if (!id || !blockIsExposed(grid, lx, y, lz, waterId)) continue;
-        let g = groups.get(id);
+        const target = isPlantBlock(id) ? plantGroups : groups;
+        let g = target.get(id);
         if (!g) {
           g = { positions: [], worldPositions: [] };
-          groups.set(id, g);
+          target.set(id, g);
         }
         g.positions.push(lx + 0.5, y + 0.5, lz + 0.5);
         g.worldPositions.push(ox + lx, y, oz + lz);
@@ -168,7 +189,7 @@ function buildChunk(cx, cz) {
     }
   }
 
-  if (groups.size === 0) return null;
+  if (groups.size === 0 && plantGroups.size === 0) return null;
 
   const meshes = [];
   for (const [id, g] of groups) {
@@ -184,6 +205,20 @@ function buildChunk(cx, cz) {
     mesh.userData.blockPositions = g.worldPositions;
     meshes.push(mesh);
   }
+
+  for (const [id, g] of plantGroups) {
+    const mesh = new THREE.InstancedMesh(getCrossGeometry(), getBlockMaterials(id), g.positions.length / 3);
+    for (let i = 0; i < g.positions.length; i += 3) {
+      dummy.position.set(g.positions[i], g.positions[i + 1], g.positions[i + 2]);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i / 3, dummy.matrix);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.position.set(ox, 0, oz);
+    mesh.userData.blockPositions = g.worldPositions;
+    meshes.push(mesh);
+  }
+
   return meshes;
 }
 

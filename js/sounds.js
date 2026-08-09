@@ -1,3 +1,5 @@
+import { DATA_VERSION } from './config.js';
+
 const SOUNDS_FILE = 'assets/sounds/blocks/sounds.json';
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -6,7 +8,7 @@ const blockSounds = new Map();
 
 export async function loadSounds() {
   try {
-    const res = await fetch(SOUNDS_FILE);
+    const res = await fetch(`${SOUNDS_FILE}?v=${DATA_VERSION}`);
     const data = await res.json();
     await Promise.all(
       Object.entries(data.soundsets || {}).map(async ([name, set]) => {

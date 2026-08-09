@@ -8,5 +8,7 @@
   "Leaves.json",
   "Cobble.json",
   "Gravel.json",
-  "Sand.json"
+  "Sand.json",
+  "GrassPlant.json",
+  "Flower.json"
 ]

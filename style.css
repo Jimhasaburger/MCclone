@@ -132,6 +132,70 @@ canvas {
   text-align: center;
 }
 
+#hotbar-menu {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 20px 24px;
+  border-radius: 8px;
+  font-family: 'GameFont', sans-serif;
+  z-index: 30;
+  text-align: center;
+}
+
+#hotbar-menu h2 {
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+#hotbar-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hm-category {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hm-category.active .hm-label {
+  color: #ffd700;
+}
+
+.hm-label {
+  width: 110px;
+  text-align: right;
+  font-size: 14px;
+  text-transform: capitalize;
+}
+
+.hm-slots {
+  display: flex;
+  gap: 2px;
+}
+
+.hm-icon {
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+  cursor: pointer;
+  border: 2px solid #333;
+  background: #222;
+}
+
+.hm-icon:hover {
+  border-color: #fff;
+}
+
+.hm-icon.empty {
+  opacity: 0.15;
+}
+
 .menu-row {
   display: flex;
   justify-content: space-between;

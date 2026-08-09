@@ -12,6 +12,21 @@ function makeFallbackMaterial() {
   return new THREE.MeshStandardMaterial({ color: 0x7c9c6e });
 }
 
+function makePlantMaterial(path) {
+  if (!path) return makeFallbackMaterial();
+  const tex = loader.load(path);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.minFilter = THREE.NearestFilter;
+  tex.magFilter = THREE.NearestFilter;
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  return new THREE.MeshStandardMaterial({
+    map: tex,
+    side: THREE.DoubleSide,
+    alphaTest: 0.5,
+  });
+}
+
 async function loadFaceMaterial(path) {
   if (!path) return makeFallbackMaterial();
   try {
@@ -35,6 +50,12 @@ async function loadBlockDef(name, retries = 3) {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       blockDefs.set(data.id, data);
+
+      if (data.type === 'plant') {
+        const path = data.sides && (data.sides.north || data.sides.top);
+        blockMaterials.set(data.id, makePlantMaterial(path));
+        return;
+      }
 
       if (data.color) {
         const mats = FACE_ORDER.map(() => {
@@ -76,6 +97,10 @@ export function isTexturesReady() {
 
 export function isUnbreakable(id) {
   return Boolean(blockDefs.get(id)?.unbreakable);
+}
+
+export function isPlantBlock(id) {
+  return blockDefs.get(id)?.type === 'plant';
 }
 
 export function isSolidBlock(id) {
