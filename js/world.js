@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { CHUNK_SIZE, CHUNK_HEIGHT, RENDER_DISTANCE, PLAYER_HEIGHT, PLAYER_SIZE } from './config.js';
-import { getBlockMaterials, getBlockDefs, isTexturesReady } from './textures.js';
+import { getBlockMaterials, isTexturesReady } from './textures.js';
 import { generateTerrain } from './worldgen.js';
 import { loadSavedChunk, saveChunkToStorage } from './save.js';
 
