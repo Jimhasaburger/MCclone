@@ -1,7 +1,6 @@
 {
   "id": 7,
   "name": "leaves",
-  "layer": "",
   "unbreakable": false,
   "sides": {
     "top": "assets/textures/blocks/Leaves.png",

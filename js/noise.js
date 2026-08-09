@@ -1,6 +1,15 @@
 let seed = 0;
 let seedReady = false;
 
+let noiseCfg = {
+  scale: 0.025,
+  octaves: 3,
+  persistence: 0.5,
+  lacunarity: 2,
+  amplitude: 8,
+  offset: 4,
+};
+
 export function setSeed(s) {
   seed = s >>> 0;
   seedReady = true;
@@ -16,6 +25,10 @@ export function isSeedReady() {
 
 export function newSeed() {
   return Math.floor(Math.random() * 0x7fffffff);
+}
+
+export function setNoiseConfig(cfg) {
+  noiseCfg = { ...noiseCfg, ...cfg };
 }
 
 function hash2D(x, y) {
@@ -38,23 +51,23 @@ function smoothNoise(x, y) {
   return n00 * (1 - sx) * (1 - sy) + n10 * sx * (1 - sy) + n01 * (1 - sx) * sy + n11 * sx * sy;
 }
 
-function fbm(x, y, octaves = 3) {
+function fbm(x, y) {
   let value = 0;
   let amp = 1;
   let freq = 1;
   let totalAmp = 0;
-  for (let i = 0; i < octaves; i++) {
+  for (let i = 0; i < noiseCfg.octaves; i++) {
     value += amp * smoothNoise(x * freq, y * freq);
     totalAmp += amp;
-    amp *= 0.5;
-    freq *= 2;
+    amp *= noiseCfg.persistence;
+    freq *= noiseCfg.lacunarity;
   }
   return value / totalAmp;
 }
 
 export function getHeight(wx, wz) {
-  const n = fbm(wx * 0.025, wz * 0.025);
-  return Math.floor(n * 8 + 4);
+  const n = fbm(wx * noiseCfg.scale, wz * noiseCfg.scale);
+  return Math.floor(n * noiseCfg.amplitude + noiseCfg.offset);
 }
 
 export function rand2D(x, z) {

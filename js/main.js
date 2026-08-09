@@ -8,7 +8,7 @@ import { initSaveControls, clearSavedChunks, getSavedSeed, saveSeed } from './sa
 import { reloadWorld, saveAllLoadedChunks } from './world.js';
 import { setSeed, newSeed, getSeed } from './noise.js';
 import { loadSounds } from './sounds.js';
-import { loadTreeDefs } from './worldgen.js';
+import { loadWorldgen } from './worldgen.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xc0d9e8);
@@ -49,7 +49,7 @@ initSaveControls(
     });
   }
 );
-Promise.all([loadTextures(), loadSounds(), loadTreeDefs(), restoreSeed()]).then(() => {
+Promise.all([loadTextures(), loadSounds(), loadWorldgen(), restoreSeed()]).then(() => {
   refreshHotbar();
   updateChunks();
   waitForReady();

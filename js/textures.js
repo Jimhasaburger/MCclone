@@ -8,25 +8,6 @@ export const blockMaterials = new Map();
 
 const loader = new THREE.TextureLoader();
 
-function parseLayers(spec) {
-  const layers = [];
-  const parts = String(spec).split(',');
-  for (const part of parts) {
-    const p = part.trim();
-    if (!p) continue;
-    const m = p.match(/^(-?\d+)_(-?\d+)$/);
-    if (m) {
-      const min = Math.min(Number(m[1]), Number(m[2]));
-      const max = Math.max(Number(m[1]), Number(m[2]));
-      for (let i = min; i <= max; i++) layers.push(i);
-    } else {
-      const n = Number(p);
-      if (Number.isFinite(n)) layers.push(n);
-    }
-  }
-  return layers;
-}
-
 function makeFallbackMaterial() {
   return new THREE.MeshStandardMaterial({ color: 0x7c9c6e });
 }
@@ -53,7 +34,6 @@ async function loadBlockDef(name, retries = 3) {
       const res = await fetch(`assets/data/blocks/${name}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      data.layers = parseLayers(data.layer);
       blockDefs.set(data.id, data);
 
       const sides = data.sides || {};

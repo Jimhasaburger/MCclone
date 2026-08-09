@@ -1,0 +1,16 @@
+{
+  "noise": {
+    "scale": 0.025,
+    "octaves": 3,
+    "persistence": 0.5,
+    "lacunarity": 2,
+    "amplitude": 8,
+    "offset": 4
+  },
+  "bedrock": "bedrock",
+  "surface": "grass",
+  "layers": [
+    { "block": "dirt", "top": 0, "bottom": -2 },
+    { "block": "stone", "top": -3, "bottom": -1000 }
+  ]
+}

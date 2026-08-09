@@ -1,0 +1,13 @@
+{
+  "id": 8,
+  "name": "cobble",
+  "unbreakable": false,
+  "sides": {
+    "top": "assets/textures/blocks/Cobble.png",
+    "bottom": "assets/textures/blocks/Cobble.png",
+    "north": "assets/textures/blocks/Cobble.png",
+    "south": "assets/textures/blocks/Cobble.png",
+    "east": "assets/textures/blocks/Cobble.png",
+    "west": "assets/textures/blocks/Cobble.png"
+  }
+}

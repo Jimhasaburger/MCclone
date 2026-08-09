@@ -1,106 +1,138 @@
 import { CHUNK_SIZE, CHUNK_HEIGHT } from './config.js';
-import { getHeight, rand2D } from './noise.js';
+import { getHeight, rand2D, setNoiseConfig } from './noise.js';
 import { getBlockDefs } from './textures.js';
 
 let treeDefs = [];
+let cfg = null;
+let idsByName = new Map();
+let replaceIds = new Set();
+let waterBlock = null;
+let idsResolved = false;
 
-export async function loadTreeDefs() {
-  const [small, big] = await Promise.all([
+export async function loadWorldgen() {
+  const [main, small, big] = await Promise.all([
+    fetch('assets/data/worldgen/main.json').then(r => r.json()),
     fetch('assets/data/structures/trees/small.json').then(r => r.json()),
     fetch('assets/data/structures/trees/big.json').then(r => r.json()),
   ]);
+  cfg = main;
+  if (cfg.noise) setNoiseConfig(cfg.noise);
   treeDefs = [small, big]
     .filter(t => t && t.chance > 0)
     .sort((a, b) => b.chance - a.chance);
 }
 
-function defId(defs, name) {
-  const d = defs.find(x => x.name === name);
-  return d ? d.id : 0;
-}
-
-const ids = { log: 0, leaves: 0, grass: 0, dirt: 0 };
-let idsResolved = false;
-
-function ensureBlockIds() {
+function ensureIds() {
   if (idsResolved) return;
   const defs = getBlockDefs();
   if (defs.length === 0) return;
-  ids.log = defId(defs, 'log');
-  ids.leaves = defId(defs, 'leaves');
-  ids.grass = defId(defs, 'grass');
-  ids.dirt = defId(defs, 'dirt');
+  idsByName = new Map(defs.map(d => [d.name, d.id]));
+  replaceIds = new Set();
+  for (const name of ['stone', 'dirt']) {
+    const id = idsByName.get(name);
+    if (id) replaceIds.add(id);
+  }
+  waterBlock = defs.find(d => typeof d.waterLevel === 'number') || null;
   idsResolved = true;
 }
 
-function lockedBlockDef(defs) {
-  let best = null;
-  for (const def of defs) {
-    if (def.locktosety && (!best || Math.min(...def.layers) < Math.min(...best.layers))) best = def;
+function blockIdAtLayer(layers, layer) {
+  for (const l of layers) {
+    if (layer <= l.top && layer >= l.bottom) return l.id;
   }
-  return best;
-}
-
-function fillBlockId(defs) {
-  let best = null;
-  for (const def of defs) {
-    if (def.locktosety) continue;
-    if (!best || Math.min(...def.layers) < Math.min(...best.layers)) best = def;
-  }
-  return best ? best.id : 0;
-}
-
-function blockIdAtLayer(defs, layer) {
-  for (const def of defs) {
-    if (def.layers.includes(layer)) return def.id;
-  }
-  let below = null;
-  let belowMin = -Infinity;
-  for (const def of defs) {
-    const min = Math.min(...def.layers);
-    if (min < layer && min > belowMin) {
-      belowMin = min;
-      below = def;
-    }
-  }
-  if (below) return below.id;
-  let deepest = null;
-  for (const def of defs) {
-    if (!deepest || Math.min(...def.layers) < Math.min(...deepest.layers)) deepest = def;
-  }
-  return deepest ? deepest.id : 1;
+  return layers.length ? layers[layers.length - 1].id : 1;
 }
 
 export function generateTerrain(cx, cz, grid) {
-  ensureBlockIds();
+  ensureIds();
+  if (!cfg) return;
   const ox = cx * CHUNK_SIZE;
   const oz = cz * CHUNK_SIZE;
-  const defs = getBlockDefs();
-  const locked = lockedBlockDef(defs);
-  const lockedId = locked ? locked.id : 0;
-  const lockedFloorY = locked ? locked.layer : 0;
-  const fillId = fillBlockId(defs);
+
+  const bedrockId = cfg.bedrock ? idsByName.get(cfg.bedrock) || 0 : 0;
+  const landId = cfg.surface ? idsByName.get(cfg.surface) || 0 : 0;
+  const waterId = waterBlock ? waterBlock.id : 0;
+  const waterLevel = waterBlock ? waterBlock.waterLevel : 0;
+  const layers = (cfg.layers || [])
+    .map(l => ({ id: idsByName.get(l.block) || 0, top: l.top, bottom: l.bottom }))
+    .filter(l => l.id)
+    .sort((a, b) => b.top - a.top);
   const surface = new Int16Array(CHUNK_SIZE * CHUNK_SIZE);
 
   for (let lx = 0; lx < CHUNK_SIZE; lx++) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
       const h = getHeight(ox + lx, oz + lz);
       const base = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT;
+      const submerged = waterId && waterLevel > 0 && h - 1 < waterLevel;
+      const surfaceId = submerged ? waterId : landId;
+
       for (let y = 0; y < h; y++) {
         let id;
-        if (lockedId && y < lockedFloorY) {
-          id = lockedId;
+        if (bedrockId && y === 0) {
+          id = bedrockId;
+        } else if (y === h - 1) {
+          id = surfaceId;
         } else {
-          id = blockIdAtLayer(defs, y - h + 2);
-          if (lockedId && id === lockedId) id = fillId;
+          id = blockIdAtLayer(layers, y - h + 2);
         }
         grid[base + y] = id;
+      }
+
+      if (submerged) {
+        for (let y = h; y < waterLevel; y++) grid[base + y] = waterId;
       }
       surface[lx * CHUNK_SIZE + lz] = h - 1;
     }
   }
 
+  generateOres(grid, ox, oz);
   generateTrees(grid, ox, oz, surface);
+}
+
+function generateOres(grid, ox, oz) {
+  for (const def of getBlockDefs()) {
+    const ore = def.ore;
+    if (!ore) continue;
+    const spacing = ore.spacing || 8;
+    const r = ore.veinSize || 4;
+    const margin = Math.ceil((CHUNK_SIZE + r) / spacing) + 1;
+    const x0 = Math.floor(ox / spacing);
+    const x1 = Math.floor((ox + CHUNK_SIZE - 1) / spacing);
+    const z0 = Math.floor(oz / spacing);
+    const z1 = Math.floor((oz + CHUNK_SIZE - 1) / spacing);
+    for (let cz = z0 - margin; cz <= z1 + margin; cz++) {
+      for (let cx = x0 - margin; cx <= x1 + margin; cx++) {
+        if (rand2D(cx * 3 + 11, cz * 5 + 7) >= (ore.rarity || 0.2)) continue;
+        const vx = cx * spacing + Math.floor(rand2D(cx * 7 + 1, cz * 11 + 1) * spacing);
+        const vz = cz * spacing + Math.floor(rand2D(cx * 13 + 1, cz * 17 + 1) * spacing);
+        const h = getHeight(vx, vz);
+        const minY = h + ore.minLayer;
+        const maxY = h + ore.maxLayer;
+        if (minY >= maxY) continue;
+        const vy = minY + Math.floor(rand2D(cx * 19 + 1, cz * 23 + 1) * (maxY - minY + 1));
+        placeVein(grid, ox, oz, vx, vy, vz, r, def.id);
+      }
+    }
+  }
+}
+
+function placeVein(grid, ox, oz, vx, vy, vz, r, id) {
+  for (let dy = -r; dy <= r; dy++) {
+    const wy = vy + dy;
+    if (wy < 0 || wy >= CHUNK_HEIGHT) continue;
+    for (let dx = -r; dx <= r; dx++) {
+      for (let dz = -r; dz <= r; dz++) {
+        if (dx * dx + dy * dy + dz * dz > r * r + 0.5) continue;
+        const wx = vx + dx;
+        const wz = vz + dz;
+        const lx = wx - ox;
+        const lz = wz - oz;
+        if (lx < 0 || lx >= CHUNK_SIZE || lz < 0 || lz >= CHUNK_SIZE) continue;
+        const base = (lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT;
+        if (replaceIds.has(grid[base + wy])) grid[base + wy] = id;
+      }
+    }
+  }
 }
 
 function rollTree(wx, wz) {
@@ -130,6 +162,9 @@ function placeLocal(grid, ox, oz, wx, y, wz, id) {
 }
 
 function placeTree(grid, ox, oz, wx, groundY, wz, def) {
+  const logId = idsByName.get('log') || 0;
+  const leafId = idsByName.get('leaves') || 0;
+  if (!logId || !leafId) return;
   const trunkMin = Math.min(def.trunkHeight[0], def.trunkHeight[1]);
   const trunkMax = Math.max(def.trunkHeight[0], def.trunkHeight[1]);
   const trunkHeight = trunkMin + Math.floor(rand2D(wx * 13, wz * 17) * (trunkMax - trunkMin + 1));
@@ -144,7 +179,7 @@ function placeTree(grid, ox, oz, wx, groundY, wz, def) {
   for (let dx = 0; dx < width; dx++) {
     for (let dz = 0; dz < width; dz++) {
       for (let y = groundY + 1; y <= trunkTopY; y++) {
-        placeLocal(grid, ox, oz, wx + dx, y, wz + dz, ids.log);
+        placeLocal(grid, ox, oz, wx + dx, y, wz + dz, logId);
       }
     }
   }
@@ -155,16 +190,18 @@ function placeTree(grid, ox, oz, wx, groundY, wz, def) {
     for (let dx = -r; dx <= r; dx++) {
       for (let dz = -r; dz <= r; dz++) {
         if (dx * dx + dz * dz > (r + 0.5) * (r + 0.5)) continue;
-        placeLocal(grid, ox, oz, wx + half + dx, y, wz + half + dz, ids.leaves);
+        placeLocal(grid, ox, oz, wx + half + dx, y, wz + half + dz, leafId);
       }
     }
   }
-  placeLocal(grid, ox, oz, wx + half, trunkTopY + leafHeight, wz + half, ids.leaves);
+  placeLocal(grid, ox, oz, wx + half, trunkTopY + leafHeight, wz + half, leafId);
 }
 
 function generateTrees(grid, ox, oz, surface) {
-  if (!treeDefs.length || !ids.log || !ids.leaves) return;
+  if (!treeDefs.length) return;
   const reach = maxTreeRadius();
+  const grassId = idsByName.get('grass') || 0;
+  const dirtId = idsByName.get('dirt') || 0;
 
   for (let lx = 0; lx < CHUNK_SIZE; lx++) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
@@ -172,7 +209,7 @@ function generateTrees(grid, ox, oz, surface) {
       const wz = oz + lz;
       const groundY = surface[lx * CHUNK_SIZE + lz];
       const groundId = grid[(lx * CHUNK_SIZE + lz) * CHUNK_HEIGHT + groundY];
-      if (groundId !== ids.grass && groundId !== ids.dirt) continue;
+      if (groundId !== grassId && groundId !== dirtId) continue;
       const def = rollTree(wx, wz);
       if (def) placeTree(grid, ox, oz, wx, groundY, wz, def);
     }

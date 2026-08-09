@@ -1,0 +1,20 @@
+{
+  "id": 9,
+  "name": "gravel",
+  "unbreakable": false,
+  "ore": {
+    "minLayer": -30,
+    "maxLayer": -2,
+    "veinSize": 6,
+    "rarity": 0.15,
+    "spacing": 8
+  },
+  "sides": {
+    "top": "assets/textures/blocks/Gravel.png",
+    "bottom": "assets/textures/blocks/Gravel.png",
+    "north": "assets/textures/blocks/Gravel.png",
+    "south": "assets/textures/blocks/Gravel.png",
+    "east": "assets/textures/blocks/Gravel.png",
+    "west": "assets/textures/blocks/Gravel.png"
+  }
+}

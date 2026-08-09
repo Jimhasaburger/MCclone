@@ -1,0 +1,14 @@
+{
+  "id": 10,
+  "name": "sand",
+  "waterLevel": 6,
+  "unbreakable": false,
+  "sides": {
+    "top": "assets/textures/blocks/sand.png",
+    "bottom": "assets/textures/blocks/sand.png",
+    "north": "assets/textures/blocks/sand.png",
+    "south": "assets/textures/blocks/sand.png",
+    "east": "assets/textures/blocks/sand.png",
+    "west": "assets/textures/blocks/sand.png"
+  }
+}
