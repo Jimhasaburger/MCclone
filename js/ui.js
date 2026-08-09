@@ -1,7 +1,5 @@
 const fontUrl = 'assets/textures/font/font.ttf';
 
-import { getBlockDefs, getBlockIconPath } from './textures.js';
-
 const keybinds = [
   ['W A S D', 'Move'],
   ['Space', 'Jump'],
@@ -18,10 +16,8 @@ const keybinds = [
 let fpsEl;
 let menuEl;
 let canvas;
-let hotbarEl;
-let selectedSlot = 0;
-const slots = [];
-const slotBlocks = [];
+let labelEl;
+let labelTimer = null;
 
 export function initUI(canvasRef) {
   canvas = canvasRef;
@@ -44,77 +40,33 @@ export function initUI(canvasRef) {
   crosshair.alt = '';
   document.body.appendChild(crosshair);
 
-  buildHotbar();
+  labelEl = document.createElement('div');
+  labelEl.id = 'hotbar-label';
+  document.body.appendChild(labelEl);
+
   buildMenu();
 
   document.addEventListener('keydown', e => {
     if (e.code === 'Tab') {
       e.preventDefault();
       toggleMenu();
-      return;
     }
-    const n = e.key;
-    if (n >= '1' && n <= '9') selectSlot(Number(n) - 1);
-  });
-
-  document.addEventListener('wheel', e => {
-    e.preventDefault();
-    selectSlot(selectedSlot + (e.deltaY > 0 ? 1 : -1));
   });
 }
 
-function buildHotbar() {
-  hotbarEl = document.createElement('div');
-  hotbarEl.id = 'hotbar';
-  for (let i = 0; i < 9; i++) {
-    const wrap = document.createElement('div');
-    wrap.className = 'hotbar-slot';
-    const slot = document.createElement('img');
-    slot.src = 'assets/textures/ui/hotbarslot.png';
-    slot.alt = '';
-    const icon = document.createElement('img');
-    icon.className = 'hotbar-icon';
-    icon.alt = '';
-    const selected = document.createElement('img');
-    selected.className = 'hotbar-selected';
-    selected.src = 'assets/textures/ui/selected.png';
-    selected.alt = '';
-    wrap.appendChild(slot);
-    wrap.appendChild(icon);
-    wrap.appendChild(selected);
-    hotbarEl.appendChild(wrap);
-    slots.push(wrap);
+export function showText(text, color = '#ffffff') {
+  if (!labelEl) return;
+  clearTimeout(labelTimer);
+  if (!text) {
+    labelEl.style.opacity = 0;
+    return;
   }
-  document.body.appendChild(hotbarEl);
-  selectSlot(0);
-}
-
-export function refreshHotbar() {
-  const defs = getBlockDefs().filter(d => !d.unbreakable && d.solid !== false);
-  slots.forEach((wrap, i) => {
-    const icon = wrap.querySelector('.hotbar-icon');
-    const def = defs[i];
-    slotBlocks[i] = def ? def.id : null;
-    wrap.classList.toggle('filled', Boolean(def));
-    if (def) {
-      icon.src = getBlockIconPath(def.id) || '';
-    } else {
-      icon.src = '';
-    }
-  });
-}
-
-function selectSlot(i) {
-  selectedSlot = ((i % 9) + 9) % 9;
-  slots.forEach((wrap, idx) => wrap.classList.toggle('active', idx === selectedSlot));
-}
-
-export function getSelectedSlot() {
-  return selectedSlot;
-}
-
-export function getSelectedBlockId() {
-  return slotBlocks[selectedSlot] || null;
+  labelEl.textContent = text;
+  labelEl.style.color = color;
+  labelEl.style.opacity = 1;
+  labelTimer = setTimeout(() => {
+    labelEl.style.opacity = 0;
+  }, 1600);
 }
 
 function buildMenu() {

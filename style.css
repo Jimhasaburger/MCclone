@@ -89,6 +89,22 @@ canvas {
   display: block;
 }
 
+#hotbar-label {
+  position: fixed;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-family: 'GameFont', sans-serif;
+  font-size: 18px;
+  text-shadow: 2px 2px 0 #000;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
 #loading {
   position: fixed;
   inset: 0;

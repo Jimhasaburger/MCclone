@@ -3,7 +3,8 @@ import { loadTextures } from './textures.js';
 import { initWorld, updateChunks, isWorldReady } from './world.js';
 import { initPlayer, updatePlayer, isPlayerSpawned } from './player.js';
 import { initBlocks, updateOutline } from './blocks.js';
-import { initUI, setFPS, hideLoading, refreshHotbar } from './ui.js';
+import { initUI, setFPS, hideLoading } from './ui.js';
+import { initHotbar, refreshHotbar } from './hotbar.js';
 import { initSaveControls, clearSavedChunks, getSavedSeed, saveSeed } from './save.js';
 import { reloadWorld, saveAllLoadedChunks } from './world.js';
 import { setSeed, newSeed, getSeed } from './noise.js';
@@ -12,7 +13,7 @@ import { loadWorldgen } from './worldgen.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xc0d9e8);
-scene.fog = new THREE.Fog(0xc0d9e8, 50, 110);
+scene.fog = new THREE.Fog(0xc0d9e8, 30, 70);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
@@ -30,6 +31,7 @@ scene.add(directionalLight);
 
 initWorld(scene, camera);
 initUI(renderer.domElement);
+initHotbar();
 initPlayer(camera, renderer.domElement);
 initBlocks(scene, camera, renderer.domElement);
 initSaveControls(

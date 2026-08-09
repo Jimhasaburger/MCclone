@@ -1,5 +1,6 @@
 {
   "id": 3,
+  "name": "bedrock",
   "unbreakable": true,
   "sides": {
     "top": "assets/textures/blocks/bedrock.png",

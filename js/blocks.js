@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { CHUNK_HEIGHT, PLAYER_HEIGHT, PLAYER_SIZE } from './config.js';
 import { getChunks, rebuildChunk, hasBlock, addBlock, removeBlock, getBlockId } from './world.js';
 import { isUnbreakable } from './textures.js';
-import { getSelectedBlockId } from './ui.js';
+import { getSelectedBlockId } from './hotbar.js';
+import { showText } from './ui.js';
 import { playerPos } from './player.js';
 import { playBlockDigSound, playBlockPlaceSound } from './sounds.js';
 
@@ -87,7 +88,11 @@ function placeBlock() {
   const px = target.bx + nx;
   const py = target.by + ny;
   const pz = target.bz + nz;
-  if (py < 0 || py >= CHUNK_HEIGHT) return;
+  if (py < 0) return;
+  if (py >= CHUNK_HEIGHT) {
+    showText('You are at the build limit! Cannot place.', '#ff5555');
+    return;
+  }
   if (hasBlock(px, py, pz)) return;
   if (blockIntersectsPlayer(px, py, pz)) return;
 

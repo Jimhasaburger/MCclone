@@ -1,5 +1,6 @@
 {
   "id": 6,
+  "name": "planks",
   "unbreakable": false,
   "sides": {
     "top": "assets/textures/blocks/planks.png",

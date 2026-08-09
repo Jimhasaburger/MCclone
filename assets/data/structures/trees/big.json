@@ -1,5 +1,7 @@
 {
   "chance": 1,
+  "log": 5,
+  "leaves": 7,
   "trunkHeight": [6, 9],
   "trunkWidth": 1,
   "leaves": {

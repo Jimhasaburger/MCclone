@@ -2,17 +2,9 @@ let seed = 0;
 let seedReady = false;
 
 let heightCfg = {
-  seaLevel: 63,
-  oceanThreshold: 0.48,
-  oceanFloor: 46,
-  continentScale: 0.02,
-  detailScale: 0.08,
-  landBase: 66,
-  detailAmplitude: 4,
-  hillScale: 0.04,
-  hillAmplitude: 5,
-  mountainThreshold: 0.52,
-  mountainAmplitude: 60,
+  base: 50,
+  scale: 0.03,
+  amplitude: 6,
 };
 
 export function setSeed(s) {
@@ -70,25 +62,9 @@ function fbm(x, y, octaves = 4) {
   return value / totalAmp;
 }
 
-export function noise2D(x, z, scale, octaves = 3) {
-  return fbm(x * scale, z * scale, octaves);
-}
-
 export function getHeight(wx, wz) {
   const c = heightCfg;
-  const continent = fbm(wx * c.continentScale, wz * c.continentScale);
-  const detail = fbm(wx * c.detailScale, wz * c.detailScale);
-
-  if (continent < c.oceanThreshold) {
-    return Math.floor(c.oceanFloor + (continent / c.oceanThreshold) * 16 + (detail - 0.5) * 4);
-  }
-
-  const hill = fbm(wx * c.hillScale + 100, wz * c.hillScale + 100);
-  let base = c.landBase + (detail - 0.5) * c.detailAmplitude + (hill - 0.5) * c.hillAmplitude;
-  if (hill > c.mountainThreshold) {
-    base += ((hill - c.mountainThreshold) / (1 - c.mountainThreshold)) * c.mountainAmplitude;
-  }
-  return Math.floor(base);
+  return Math.floor(c.base + (fbm(wx * c.scale, wz * c.scale) - 0.5) * c.amplitude);
 }
 
 export function rand2D(x, z) {

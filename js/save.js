@@ -50,7 +50,7 @@ let db;
 function openDB() {
   return new Promise((resolve, reject) => {
     if (db) return resolve(db);
-    const req = indexedDB.open(DB_NAME, 3);
+    const req = indexedDB.open(DB_NAME, 5);
     req.onupgradeneeded = () => {
       const db = req.result;
       if (db.objectStoreNames.contains(STORE)) db.deleteObjectStore(STORE);

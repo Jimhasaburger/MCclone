@@ -1,5 +1,6 @@
 {
   "id": 2,
+  "name": "stone",
   "unbreakable": false,
   "sides": {
     "top": "assets/textures/blocks/stone.png",
