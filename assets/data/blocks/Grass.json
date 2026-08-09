@@ -1,0 +1,10 @@
+{
+  "sides": {
+    "top": "assets/textures/blocks/grassblocktop.png",
+    "bottom": "assets/textures/blocks/dirt.png",
+    "north": "assets/textures/blocks/grassblockside.png",
+    "south": "assets/textures/blocks/grassblockside.png",
+    "east": "assets/textures/blocks/grassblockside.png",
+    "west": "assets/textures/blocks/grassblockside.png"
+  }
+}
