@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { loadTextures } from './textures.js';
 import { initWorld, updateChunks, isWorldReady } from './world.js';
-import { initPlayer, updatePlayer, isPlayerSpawned } from './player.js';
+import { initPlayer, updatePlayer, isPlayerSpawned, playerPos } from './player.js';
 import { initBlocks, updateOutline } from './blocks.js';
-import { initUI, setFPS, hideLoading } from './ui.js';
+import { initUI, setFPS, setCoords, hideLoading } from './ui.js';
 import { initHotbar, refreshHotbar, loadHotbarCategories } from './hotbar.js';
 import { initSaveControls, clearSavedChunks, getSavedSeed, saveSeed } from './save.js';
 import { reloadWorld, saveAllLoadedChunks } from './world.js';
@@ -87,6 +87,7 @@ function animate() {
 
   updatePlayer(dt);
   updateOutline();
+  setCoords(playerPos.x, playerPos.y, playerPos.z);
 
   frameCount++;
   if (now - lastFpsTime >= 500) {

@@ -18,6 +18,7 @@ let menuEl;
 let canvas;
 let labelEl;
 let labelTimer = null;
+let coordsEl;
 
 export function initUI(canvasRef) {
   canvas = canvasRef;
@@ -33,6 +34,9 @@ export function initUI(canvasRef) {
 
   fpsEl = document.getElementById('fps');
   if (fpsEl) fpsEl.style.fontFamily = "'GameFont', sans-serif";
+
+  coordsEl = document.getElementById('coords');
+  if (coordsEl) coordsEl.style.fontFamily = "'GameFont', sans-serif";
 
   const crosshair = document.createElement('img');
   crosshair.id = 'crosshair';
@@ -110,6 +114,10 @@ export function toggleMenu() {
 
 export function setFPS(fps) {
   if (fpsEl) fpsEl.textContent = `FPS: ${fps}`;
+}
+
+export function setCoords(x, y, z) {
+  if (coordsEl) coordsEl.textContent = `X: ${Math.floor(x)}  Y: ${Math.floor(y)}  Z: ${Math.floor(z)}`;
 }
 
 export function hideLoading() {

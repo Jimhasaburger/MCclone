@@ -25,6 +25,16 @@ canvas {
   z-index: 10;
 }
 
+#coords {
+  position: fixed;
+  bottom: 40px;
+  left: 8px;
+  color: #fff;
+  font-size: 24px;
+  pointer-events: none;
+  z-index: 10;
+}
+
 #crosshair {
   position: fixed;
   top: 50%;

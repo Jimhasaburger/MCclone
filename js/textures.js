@@ -14,7 +14,7 @@ function makeFallbackMaterial() {
 
 function makePlantMaterial(path) {
   if (!path) return makeFallbackMaterial();
-  const tex = loader.load(path);
+  const tex = loader.load(`${path}?v=${DATA_VERSION}`);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.minFilter = THREE.NearestFilter;
   tex.magFilter = THREE.NearestFilter;
