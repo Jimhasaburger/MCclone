@@ -3,7 +3,7 @@ import { loadTextures } from './textures.js';
 import { initWorld, updateChunks, isWorldReady } from './world.js';
 import { initPlayer, updatePlayer, isPlayerSpawned, playerPos } from './player.js';
 import { initBlocks, updateOutline } from './blocks.js';
-import { initUI, setFPS, setCoords, hideLoading } from './ui.js';
+import { initUI, setFPS, setCoords, setVersion, hideLoading } from './ui.js';
 import { initHotbar, refreshHotbar } from './hotbar.js';
 import { initInventory } from './inventory.js';
 import { initSaveControls, clearSavedChunks, getSavedSeed, saveSeed } from './save.js';
@@ -12,6 +12,8 @@ import { setSeed, newSeed, getSeed } from './noise.js';
 import { loadSounds, initMusic } from './sounds.js';
 import { loadWorldgen } from './worldgen.js';
 import { initClouds, updateClouds } from './clouds.js';
+import { initFalls, updateFalls } from './falls.js';
+import { DATA_VERSION } from './config.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xc0d9e8);
@@ -24,7 +26,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 document.body.appendChild(renderer.domElement);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+const ambientLight = new THREE.AmbientLight(0xffffff, 1);
 scene.add(ambientLight);
 
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
@@ -37,6 +39,7 @@ initHotbar();
 initInventory(renderer.domElement);
 initPlayer(camera, renderer.domElement);
 initBlocks(scene, camera, renderer.domElement);
+initFalls(scene);
 initSaveControls(
   async ({ seed }) => {
     if (seed !== null) {
@@ -65,6 +68,19 @@ async function restoreSeed() {
   setSeed(saved === null ? 0 : saved);
 }
 
+async function loadVersion() {
+  try {
+    const res = await fetch('ver.txt');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const ver = (await res.text()).trim();
+    setVersion(`MCclone version ${ver} (dat${DATA_VERSION})`);
+  } catch (e) {
+    setVersion(`MCclone version unknown (dat${DATA_VERSION})`);
+  }
+}
+
+loadVersion();
+
 function waitForReady() {
   if (isWorldReady() && isPlayerSpawned()) {
     hideLoading();
@@ -90,6 +106,7 @@ function animate() {
 
   updatePlayer(dt);
   updateOutline();
+  updateFalls(dt);
   updateClouds(dt, playerPos.x, playerPos.z);
   setCoords(playerPos.x, playerPos.y, playerPos.z);
 

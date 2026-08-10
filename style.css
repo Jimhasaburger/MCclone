@@ -20,7 +20,21 @@ canvas {
   bottom: 8px;
   left: 8px;
   color: #fff;
+  font-family: 'GameFont', sans-serif;
   font-size: 24px;
+  text-shadow: 2px 2px 0 #000;
+  pointer-events: none;
+  z-index: 10;
+}
+
+#version {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  color: #fff;
+  font-size: 18px;
+  font-family: 'GameFont', sans-serif;
+  text-shadow: 2px 2px 0 #000;
   pointer-events: none;
   z-index: 10;
 }
@@ -30,7 +44,9 @@ canvas {
   bottom: 40px;
   left: 8px;
   color: #fff;
+  font-family: 'GameFont', sans-serif;
   font-size: 24px;
+  text-shadow: 2px 2px 0 #000;
   pointer-events: none;
   z-index: 10;
 }
@@ -40,7 +56,9 @@ canvas {
   bottom: 68px;
   left: 8px;
   color: #fff;
+  font-family: 'GameFont', sans-serif;
   font-size: 24px;
+  text-shadow: 2px 2px 0 #000;
   pointer-events: none;
   z-index: 10;
 }
@@ -141,7 +159,8 @@ canvas {
   color: #fff;
   padding: 24px 32px;
   border-radius: 8px;
-  font-family: 'GameFont', monospace;
+  font-family: 'GameFont', sans-serif;
+  text-shadow: 2px 2px 0 #000;
   min-width: 340px;
   z-index: 30;
 }
@@ -162,6 +181,7 @@ canvas {
   padding: 20px 24px;
   border-radius: 8px;
   font-family: 'GameFont', sans-serif;
+  text-shadow: 2px 2px 0 #000;
   z-index: 30;
   text-align: center;
 }

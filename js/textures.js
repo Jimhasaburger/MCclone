@@ -103,6 +103,10 @@ export function isPlantBlock(id) {
   return blockDefs.get(id)?.type === 'plant';
 }
 
+export function isFallingBlock(id) {
+  return Boolean(blockDefs.get(id)?.falls);
+}
+
 export function isSolidBlock(id) {
   if (!id) return false;
   const def = blockDefs.get(id);

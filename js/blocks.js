@@ -6,6 +6,7 @@ import { getSelectedBlockId } from './hotbar.js';
 import { showText } from './ui.js';
 import { playerPos } from './player.js';
 import { playBlockDigSound, playBlockPlaceSound } from './sounds.js';
+import { startFallsAbove, checkBlockFalls } from './falls.js';
 
 const raycaster = new THREE.Raycaster();
 
@@ -67,6 +68,7 @@ function breakBlock() {
   if (!id || isUnbreakable(id)) return;
   removeBlock(target.bx, target.by, target.bz);
   rebuildChunk(target.bx, target.bz);
+  startFallsAbove(target.bx, target.by, target.bz);
   playBlockDigSound(id);
 }
 
@@ -98,6 +100,7 @@ function placeBlock() {
 
   addBlock(px, py, pz, blockId);
   rebuildChunk(px, pz);
+  checkBlockFalls(px, py, pz);
   playBlockPlaceSound(blockId);
 }
 

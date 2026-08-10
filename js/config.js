@@ -11,4 +11,4 @@ export const CLOUD_HEIGHT = 128;
 export const BLOCK_INDEX_FILE = 'assets/data/blocks/index.json';
 export const DEFAULT_BLOCK_ID = 1;
 
-export const DATA_VERSION = 2;
+export const DATA_VERSION = 3;

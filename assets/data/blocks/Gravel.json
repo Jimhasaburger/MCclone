@@ -2,6 +2,7 @@
   "id": 9,
   "name": "gravel",
   "unbreakable": false,
+  "falls": true,
   "ore": {
     "minLayer": -30,
     "maxLayer": -2,

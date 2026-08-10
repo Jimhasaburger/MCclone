@@ -2,6 +2,7 @@
   "id": 10,
   "name": "sand",
   "unbreakable": false,
+  "falls": true,
   "sides": {
     "top": "assets/textures/blocks/sand.png",
     "bottom": "assets/textures/blocks/sand.png",

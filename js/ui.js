@@ -22,6 +22,7 @@ let labelEl;
 let labelTimer = null;
 let coordsEl;
 let songEl;
+let versionEl;
 
 export function initUI(canvasRef) {
   canvas = canvasRef;
@@ -43,6 +44,9 @@ export function initUI(canvasRef) {
 
   songEl = document.getElementById('song');
   if (songEl) songEl.style.fontFamily = "'GameFont', sans-serif";
+
+  versionEl = document.getElementById('version');
+  if (versionEl) versionEl.style.fontFamily = "'GameFont', sans-serif";
 
   const crosshair = document.createElement('img');
   crosshair.id = 'crosshair';
@@ -124,6 +128,10 @@ export function setFPS(fps) {
 
 export function setCoords(x, y, z) {
   if (coordsEl) coordsEl.textContent = `X: ${Math.floor(x)}  Y: ${Math.floor(y)}  Z: ${Math.floor(z)}`;
+}
+
+export function setVersion(text) {
+  if (versionEl) versionEl.textContent = text;
 }
 
 export function setSong(text) {
