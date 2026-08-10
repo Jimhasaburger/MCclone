@@ -1,6 +1,8 @@
 {
   "id": 16,
   "name": "red mushroom",
+  "type": "plant",
+  "solid": false,
   "unbreakable": false,
   "sides": {
     "top": "assets/textures/blocks/Red_Mushroom.webp",
