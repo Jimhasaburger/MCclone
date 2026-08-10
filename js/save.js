@@ -1,6 +1,7 @@
 import JSZip from 'jszip';
 import { CHUNK_SIZE, CHUNK_HEIGHT } from './config.js';
 import { getSeed } from './noise.js';
+import { showText } from './ui.js';
 
 const DB_NAME = 'mcworld';
 const STORE = 'chunks';
@@ -151,6 +152,7 @@ export async function clearSavedChunks() {
 }
 
 export async function exportWorld() {
+  showText('Saving world...', '#ffd700');
   const saved = await getAllSavedChunks();
   const zip = new JSZip();
   zip.file('seed.txt', String(getSeed()));
@@ -165,6 +167,7 @@ export async function exportWorld() {
   a.click();
   URL.revokeObjectURL(url);
   console.log(`Exported ${saved.length} chunks`);
+  showText(`World saved (${saved.length} chunks)`, '#7fff7f');
 }
 
 export async function importWorld(file) {
