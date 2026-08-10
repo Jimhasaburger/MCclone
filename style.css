@@ -39,6 +39,18 @@ canvas {
   z-index: 10;
 }
 
+#hint {
+  position: fixed;
+  top: 30px;
+  left: 8px;
+  color: #aaa;
+  font-size: 14px;
+  font-family: 'GameFont', sans-serif;
+  text-shadow: 2px 2px 0 #000;
+  pointer-events: none;
+  z-index: 10;
+}
+
 #coords {
   position: fixed;
   bottom: 40px;

@@ -16,6 +16,9 @@
   ],
   "fill": 2,
   "veins": [
-    { "block": 9, "minY": 4, "maxY": 40, "chance": 0.04, "size": [3, 7] }
+    { "block": 9, "minY": 4, "maxY": 40, "chance": 0.04, "size": [3, 7] },
+    { "block": 18, "minY": 16, "maxY": 64, "chance": 0.06, "size": [3, 7] },
+    { "block": 19, "minY": 4, "maxY": 48, "chance": 0.04, "size": [3, 7] },
+    { "block": 20, "minY": 0, "maxY": 28, "chance": 0.02, "size": [2, 6] }
   ]
 }

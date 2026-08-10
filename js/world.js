@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { CHUNK_SIZE, CHUNK_HEIGHT, RENDER_DISTANCE, PLAYER_HEIGHT, PLAYER_SIZE } from './config.js';
-import { getBlockMaterials, isTexturesReady, isSolidBlock, isPlantBlock, getWaterId } from './textures.js';
+import { getBlockMaterials, isTexturesReady, isSolidBlock, isPlantBlock, getWaterId, isTransparentBlock } from './textures.js';
 import { isSeedReady } from './noise.js';
 import { generateTerrain } from './worldgen.js';
 import { loadSavedChunk, saveChunkToStorage } from './save.js';
@@ -157,6 +157,8 @@ function blockIsExposed(grid, lx, y, lz, waterId) {
     if (self === waterId) {
       if (n !== waterId) return true;
     } else if (n === waterId) {
+      return true;
+    } else if (isTransparentBlock(n)) {
       return true;
     } else if (!isSolidBlock(n)) {
       return true;

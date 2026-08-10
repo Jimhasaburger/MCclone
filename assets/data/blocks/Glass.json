@@ -2,6 +2,7 @@
   "id": 21,
   "name": "Glass",
   "unbreakable": false,
+  "transparent": true,
   "sides": {
     "top": "assets/textures/blocks/Glass.png",
     "bottom": "assets/textures/blocks/Glass.png",

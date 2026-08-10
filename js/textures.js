@@ -75,6 +75,13 @@ async function loadBlockDef(name, retries = 3) {
       const mats = await Promise.all(
         FACE_ORDER.map(face => loadFaceMaterial(sides[face]))
       );
+      if (data.transparent) {
+        for (const mat of mats) {
+          mat.transparent = true;
+          mat.opacity = data.opacity ?? 0.8;
+          mat.depthWrite = false;
+        }
+      }
       blockMaterials.set(data.id, mats);
       return;
     } catch (e) {
@@ -111,6 +118,10 @@ export function isSolidBlock(id) {
   if (!id) return false;
   const def = blockDefs.get(id);
   return def ? def.solid !== false : true;
+}
+
+export function isTransparentBlock(id) {
+  return Boolean(blockDefs.get(id)?.transparent);
 }
 
 export function getWaterId() {
