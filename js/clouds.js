@@ -2,10 +2,10 @@ import * as THREE from 'three';
 import { DATA_VERSION, CLOUD_HEIGHT } from './config.js';
 
 const CLOUD_TEXTURE = `assets/textures/envirnoment/clouds.png?v=${DATA_VERSION}`;
-const TILE_SIZE = 120;
+const TILE_SIZE = 2000;
 const PLANE_SIZE = 900;
 const FADE_NEAR = 90;
-const FADE_FAR = 300;
+const FADE_FAR = 320;
 const DRIFT_SPEED = 0.5;
 
 let sceneRef;
