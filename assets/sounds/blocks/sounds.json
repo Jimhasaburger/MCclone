@@ -31,6 +31,14 @@
         "assets/sounds/blocks/Wood/dig3.mp3",
         "assets/sounds/blocks/Wood/dig4.ogg"
       ]
+    },
+    "Sand": {
+      "dig":[
+        "assets/sounds/blocks/Sand/dig1.mp3",
+        "assets/sounds/blocks/Sand/dig2.mp3",
+        "assets/sounds/blocks/Sand/dig3.mp3",
+        "assets/sounds/blocks/Sand/dig4.mp3"
+      ]
     }
   },
   "blocks": {
@@ -42,7 +50,7 @@
     "7": "Grass",
     "8": "Stone",
     "9":"Dirt",
-    "10": "Stone",
+    "10": "Sand",
     "11": "Grass",
     "12": "Grass"
   }

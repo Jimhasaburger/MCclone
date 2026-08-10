@@ -11,6 +11,7 @@ import { reloadWorld, saveAllLoadedChunks } from './world.js';
 import { setSeed, newSeed, getSeed } from './noise.js';
 import { loadSounds, initMusic } from './sounds.js';
 import { loadWorldgen } from './worldgen.js';
+import { initClouds, updateClouds } from './clouds.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xc0d9e8);
@@ -53,7 +54,7 @@ initSaveControls(
     });
   }
 );
-Promise.all([loadTextures(), loadSounds(), initMusic(), loadWorldgen(), restoreSeed()]).then(() => {
+Promise.all([loadTextures(), loadSounds(), initMusic(), loadWorldgen(), restoreSeed(), initClouds(scene)]).then(() => {
   refreshHotbar();
   updateChunks();
   waitForReady();
@@ -89,6 +90,7 @@ function animate() {
 
   updatePlayer(dt);
   updateOutline();
+  updateClouds(dt, playerPos.x, playerPos.z);
   setCoords(playerPos.x, playerPos.y, playerPos.z);
 
   frameCount++;
