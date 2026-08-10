@@ -1,0 +1,13 @@
+{
+  "id": 16,
+  "name": "red mushroom",
+  "unbreakable": false,
+  "sides": {
+    "top": "assets/textures/blocks/Red_Mushroom.webp",
+    "bottom": "assets/textures/blocks/Red_Mushroom.webp",
+    "north": "assets/textures/blocks/Red_Mushroom.webp",
+    "south": "assets/textures/blocks/Red_Mushroom.webp",
+    "east": "assets/textures/blocks/Red_Mushroom.webp",
+    "west": "assets/textures/blocks/Red_Mushroom.webp"
+  }
+}

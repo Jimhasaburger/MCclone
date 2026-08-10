@@ -1,0 +1,13 @@
+{
+  "id": 15,
+  "name": "Gold Block",
+  "unbreakable": false,
+  "sides": {
+    "top": "assets/textures/blocks/Gold_Block.png",
+    "bottom": "assets/textures/blocks/Gold_Block.png",
+    "north": "assets/textures/blocks/Gold_Block.png",
+    "south": "assets/textures/blocks/Gold_Block.png",
+    "east": "assets/textures/blocks/Gold_Block.png",
+    "west": "assets/textures/blocks/Gold_Block.png"
+  }
+}
