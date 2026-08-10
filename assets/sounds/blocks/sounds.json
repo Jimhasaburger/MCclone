@@ -39,6 +39,29 @@
         "assets/sounds/blocks/Sand/dig3.mp3",
         "assets/sounds/blocks/Sand/dig4.mp3"
       ]
+    },
+    "Glass": {
+      "dig": [
+        "assets/sounds/blocks/Glass/Glass_dig1.ogg",
+        "assets/sounds/blocks/Glass/Glass_dig2.ogg",
+        "assets/sounds/blocks/Glass/Glass_dig3.ogg"
+      ]
+    },
+    "Wool": {
+      "dig": [
+        "assets/sounds/blocks/Wool/Cloth_dig1.ogg.mp3",
+        "assets/sounds/blocks/Wool/Cloth_dig2.ogg.mp3",
+        "assets/sounds/blocks/Wool/Cloth_dig3.ogg.mp3",
+        "assets/sounds/blocks/Wool/Cloth_dig4.ogg.mp3"
+      ]
+    },
+    "Sponge": {
+      "dig": [
+        "assets/sounds/blocks/Sponge/Sponge_break1.ogg.mp3",
+        "assets/sounds/blocks/Sponge/Sponge_break2.ogg.mp3",
+        "assets/sounds/blocks/Sponge/Sponge_break3.ogg.mp3",
+        "assets/sounds/blocks/Sponge/Sponge_break4.ogg.mp3"
+      ]
     }
   },
   "blocks": {
@@ -63,6 +86,6 @@
     "20": "Stone",
     "21": "Glass",
     "22": "Wool",
-    "23": "Grass"
+    "23": "Sponge"
   }
 }
