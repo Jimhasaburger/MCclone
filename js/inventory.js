@@ -266,11 +266,11 @@ function renderScroll() {
   const trackScaledHeight = TRACK_HEIGHT * SCALE;
   const thumbScaledHeight = canScroll
     ? Math.round(Math.max(THUMB_HEIGHT * SCALE, trackScaledHeight * (ROWS / totalRows)))
-    : trackScaledHeight;
+    : THUMB_HEIGHT * SCALE;
   const maxTop = trackScaledHeight - thumbScaledHeight;
   const offs = maxRowOffset > 0 ? rowOffset / maxRowOffset : 0;
 
-  thumbEl.style.display = canScroll ? 'block' : 'none';
+  thumbEl.style.display = 'block';
   thumbEl.style.height = `${thumbScaledHeight}px`;
   thumbEl.style.backgroundSize = `${THUMB_WIDTH * 2 * SCALE}px ${thumbScaledHeight}px`;
   thumbEl.style.top = `${Math.round(offs * maxTop)}px`;
