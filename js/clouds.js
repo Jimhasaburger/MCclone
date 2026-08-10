@@ -67,6 +67,7 @@ export async function initClouds(scene) {
   const geometry = new THREE.PlaneGeometry(PLANE_SIZE, PLANE_SIZE);
   cloudGroup = new THREE.Group();
   const mesh = new THREE.Mesh(geometry, cloudMaterial);
+  mesh.rotation.x = -Math.PI / 2;
   cloudGroup.add(mesh);
   sceneRef.add(cloudGroup);
 }
