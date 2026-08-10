@@ -1,0 +1,15 @@
+{
+  "id": 14,
+  "name": "Dandelion",
+  "type": "plant",
+  "solid": false,
+  "unbreakable": false,
+  "sides": {
+    "top": "assets/textures/blocks/Dandelion.png",
+    "bottom": "assets/textures/blocks/Dandelion.png",
+    "north": "assets/textures/blocks/Dandelion.png",
+    "south": "assets/textures/blocks/Dandelion.png",
+    "east": "assets/textures/blocks/Dandelion.png",
+    "west": "assets/textures/blocks/Dandelion.png"
+  }
+}
