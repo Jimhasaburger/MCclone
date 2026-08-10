@@ -24,8 +24,8 @@ function getCrossGeometry() {
     positions.push(...a, ...b, ...c, ...c, ...d, ...a);
     uvs.push(0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0);
   };
-  pushQuad([0.8, 0, 0.8], [0.8, 1, 0.8], [-0.8, 1, -0.8], [-0.8, 0, -0.8]);
-  pushQuad([0.8, 0, -0.8], [0.8, 1, -0.8], [-0.8, 1, 0.8], [-0.8, 0, 0.8]);
+  pushQuad([0.4, -0.5, 0.4], [0.4, 0.5, 0.4], [-0.4, 0.5, -0.4], [-0.4, -0.5, -0.4]);
+  pushQuad([0.4, -0.5, -0.4], [0.4, 0.5, -0.4], [-0.4, 0.5, 0.4], [-0.4, -0.5, 0.4]);
   crossGeo = new THREE.BufferGeometry();
   crossGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   crossGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));

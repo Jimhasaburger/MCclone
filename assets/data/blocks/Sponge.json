@@ -1,0 +1,13 @@
+{
+  "id": 23,
+  "name": "Sponge",
+  "unbreakable": false,
+  "sides": {
+    "top": "assets/textures/blocks/Sponge.png",
+    "bottom": "assets/textures/blocks/Sponge.png",
+    "north": "assets/textures/blocks/Sponge.png",
+    "south": "assets/textures/blocks/Sponge.png",
+    "east": "assets/textures/blocks/Sponge.png",
+    "west": "assets/textures/blocks/Sponge.png"
+  }
+}
