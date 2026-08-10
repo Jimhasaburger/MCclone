@@ -15,5 +15,10 @@
   "Dandelion.json",
   "Gold_Block.json",
   "Red_Mushroom.json",
-  "Brown_Mushroom.json"
+  "Brown_Mushroom.json",
+  "Coal_Ore.json",
+  "Iron_Ore.json",
+  "Gold_Ore.json",
+  "Glass.json",
+  "White_Wool.json"
 ]

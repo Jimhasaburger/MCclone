@@ -1,0 +1,13 @@
+{
+  "id": 22,
+  "name": "White Wool",
+  "unbreakable": false,
+  "sides": {
+    "top": "assets/textures/blocks/White_Wool.png",
+    "bottom": "assets/textures/blocks/White_Wool.png",
+    "north": "assets/textures/blocks/White_Wool.png",
+    "south": "assets/textures/blocks/White_Wool.png",
+    "east": "assets/textures/blocks/White_Wool.png",
+    "west": "assets/textures/blocks/White_Wool.png"
+  }
+}

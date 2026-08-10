@@ -1,6 +1,0 @@
-ok
-
-
-so now copy the sapling, then edit name and ID ()
-
-now i will edit index.json!

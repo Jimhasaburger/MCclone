@@ -1,0 +1,13 @@
+{
+  "id": 21,
+  "name": "Glass",
+  "unbreakable": false,
+  "sides": {
+    "top": "assets/textures/blocks/Glass.png",
+    "bottom": "assets/textures/blocks/Glass.png",
+    "north": "assets/textures/blocks/Glass.png",
+    "south": "assets/textures/blocks/Glass.png",
+    "east": "assets/textures/blocks/Glass.png",
+    "west": "assets/textures/blocks/Glass.png"
+  }
+}

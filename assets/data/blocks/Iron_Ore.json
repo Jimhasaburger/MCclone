@@ -1,0 +1,13 @@
+{
+  "id": 19,
+  "name": "Iron Ore",
+  "unbreakable": false,
+  "sides": {
+    "top": "assets/textures/blocks/Iron_Ore.png",
+    "bottom": "assets/textures/blocks/Iron_Ore.png",
+    "north": "assets/textures/blocks/Iron_Ore.png",
+    "south": "assets/textures/blocks/Iron_Ore.png",
+    "east": "assets/textures/blocks/Iron_Ore.png",
+    "west": "assets/textures/blocks/Iron_Ore.png"
+  }
+}

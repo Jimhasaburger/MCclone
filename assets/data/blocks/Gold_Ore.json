@@ -1,0 +1,13 @@
+{
+  "id": 20,
+  "name": "Gold Ore",
+  "unbreakable": false,
+  "sides": {
+    "top": "assets/textures/blocks/Gold_Ore.png",
+    "bottom": "assets/textures/blocks/Gold_Ore.png",
+    "north": "assets/textures/blocks/Gold_Ore.png",
+    "south": "assets/textures/blocks/Gold_Ore.png",
+    "east": "assets/textures/blocks/Gold_Ore.png",
+    "west": "assets/textures/blocks/Gold_Ore.png"
+  }
+}
