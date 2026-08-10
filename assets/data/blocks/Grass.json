@@ -2,7 +2,6 @@
   "id": 1,
   "name": "grass_block",
   "unbreakable": false,
-  "transparent": true,
   "sides": {
     "top": "assets/textures/blocks/grassblocktop.png",
     "bottom": "assets/textures/blocks/dirt.png",

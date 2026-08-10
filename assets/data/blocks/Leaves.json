@@ -2,6 +2,7 @@
   "id": 7,
   "name": "leaves",
   "unbreakable": false,
+  "transparent": true,
   "sides": {
     "top": "assets/textures/blocks/Leaves.png",
     "bottom": "assets/textures/blocks/Leaves.png",
