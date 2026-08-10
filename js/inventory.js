@@ -42,8 +42,13 @@ let rowOffset = 0;
 let maxRowOffset = 0;
 let open = false;
 let dragging = false;
+let thumbGrabOffset = 0;
 let dragItem = null;
 let domElement;
+
+function clamp01(v) {
+  return Math.max(0, Math.min(1, v));
+}
 
 export function initInventory(canvasRef) {
   domElement = canvasRef;
@@ -248,7 +253,11 @@ function renderScroll() {
   gridSlots.forEach((s, i) => {
     const idx = start + i;
     const item = idx < items.length ? items[idx] : null;
-    s.icon.src = item ? item.icon : '';
+    if (item && item.icon) {
+      s.icon.src = item.icon;
+    } else {
+      s.icon.removeAttribute('src');
+    }
     s.el.classList.toggle('empty', !item);
   });
 
@@ -277,7 +286,12 @@ function renderHotbar() {
   const sel = getSelectedSlot();
   hotbarSlotEls.forEach((s, i) => {
     const def = map.get(ids[i]);
-    s.icon.src = def ? getBlockIconPath(def.id) || '' : '';
+    const path = def ? getBlockIconPath(def.id) : '';
+    if (def && path) {
+      s.icon.src = path;
+    } else {
+      s.icon.removeAttribute('src');
+    }
     s.el.classList.toggle('active', i === sel);
     s.el.classList.toggle('empty', !def);
   });
@@ -289,7 +303,7 @@ function scrollByRows(dir, page = 1) {
 }
 
 function setRowFromRatio(rel) {
-  rowOffset = Math.round(Math.max(0, Math.min(1, rel)) * maxRowOffset);
+  rowOffset = Math.round(clamp01(rel) * maxRowOffset);
   renderScroll();
 }
 
@@ -302,7 +316,8 @@ function onTrackClick(e) {
 function onThumbDown(e) {
   if (maxRowOffset <= 0) return;
   dragging = true;
-  updateThumbDrag(e);
+  thumbGrabOffset = e.clientY - thumbEl.getBoundingClientRect().top;
+  onThumbMove(e);
   document.addEventListener('mousemove', onThumbMove);
   document.addEventListener('mouseup', onThumbUp);
   e.stopPropagation();
@@ -311,14 +326,10 @@ function onThumbDown(e) {
 
 function onThumbMove(e) {
   if (!dragging) return;
-  updateThumbDrag(e);
-}
-
-function updateThumbDrag(e) {
   const rect = trackEl.getBoundingClientRect();
   const thumbScaledHeight = thumbEl.getBoundingClientRect().height;
   const maxTop = rect.height - thumbScaledHeight;
-  const rel = (e.clientY - rect.top - thumbScaledHeight / 2) / maxTop;
+  const rel = clamp01((e.clientY - rect.top - thumbGrabOffset) / maxTop);
   setRowFromRatio(rel);
 }
 

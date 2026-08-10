@@ -63,8 +63,10 @@ export function refreshHotbar() {
   slots.forEach((wrap, i) => {
     const icon = wrap.querySelector('.hotbar-icon');
     const def = map.get(slotIds[i]) || null;
+    const path = def ? getBlockIconPath(def.id) : '';
+    if (def && path) icon.src = path;
+    else icon.removeAttribute('src');
     wrap.classList.toggle('filled', Boolean(def));
-    icon.src = def ? getBlockIconPath(def.id) || '' : '';
   });
   selectSlot(selectedSlot);
 }
@@ -74,8 +76,10 @@ export function setHotbarSlot(i, id) {
   const def = getBlockDefs().find(d => d.id === id);
   const wrap = slots[i];
   const icon = wrap.querySelector('.hotbar-icon');
+  const path = def ? getBlockIconPath(def.id) : '';
+  if (def && path) icon.src = path;
+  else icon.removeAttribute('src');
   wrap.classList.toggle('filled', Boolean(def));
-  icon.src = def ? getBlockIconPath(def.id) || '' : '';
   if (i === selectedSlot) showText(def ? displayName(def) : '');
 }
 

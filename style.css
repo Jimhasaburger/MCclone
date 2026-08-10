@@ -261,6 +261,10 @@ canvas {
   cursor: default;
 }
 
+#inventory .inv-item-slot.empty .inv-item-icon {
+  display: none;
+}
+
 #inventory .inv-item-icon {
   position: absolute;
   inset: 0;
