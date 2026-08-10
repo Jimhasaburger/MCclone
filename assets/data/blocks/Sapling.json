@@ -1,0 +1,15 @@
+{
+  "id": 13,
+  "name": "sapling",
+  "type": "plant",
+  "solid": false,
+  "unbreakable": false,
+  "sides": {
+    "top": "assets/textures/blocks/Sapling.png",
+    "bottom": "assets/textures/blocks/Sapling.png",
+    "north": "assets/textures/blocks/Sapling.png",
+    "south": "assets/textures/blocks/Sapling.png",
+    "east": "assets/textures/blocks/Sapling.png",
+    "west": "assets/textures/blocks/Sapling.png"
+  }
+}
