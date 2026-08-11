@@ -75,9 +75,9 @@ async function loadVersion() {
     const res = await fetch('ver.txt');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const ver = (await res.text()).trim();
-    setVersion(`MCclone version ${ver} (dat${DATA_VERSION})`);
+    setVersion(`Craft.JS version ${ver} (dat${DATA_VERSION})`);
   } catch (e) {
-    setVersion(`MCclone version unknown (dat${DATA_VERSION})`);
+    setVersion(`Craft.JS version unknown (dat${DATA_VERSION})`);
   }
 }
 

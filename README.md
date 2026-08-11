@@ -1,4 +1,4 @@
-# MCCLONE
+# Craft.JS
 
 minecraft JS clone! 
 
