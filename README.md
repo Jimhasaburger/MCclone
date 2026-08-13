@@ -5,4 +5,4 @@ minecraft JS clone!
 
 made by Jimhasaburger and Chadchese (you dont see commits because using VS code collab)
 
-license added my charlesjchai
+license added by charlesjchai
